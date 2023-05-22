@@ -5,6 +5,7 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
+  searchProducts,
 } from '../controllers/ProductController';
 import { createCurrency, deleteCurrency, getCurrencies, getCurrencyById, updateCurrency } from '../controllers/CurrencyController';
 import { createCategory, deleteCategory, getCategories, getCategoryById, updateCategory } from '../controllers/CategoryController';
@@ -15,6 +16,7 @@ const router = express.Router();
 
 /** Product Routes*/
 router.post('/product', createProduct);
+router.get('/products/filter', searchProducts);
 router.get('/products', getProducts);
 router.get('/product/:id', getProductById);
 router.put('/product/:id', updateProduct);

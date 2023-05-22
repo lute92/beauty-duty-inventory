@@ -32,6 +32,29 @@ export const getProducts = async (req: Request, res: Response) => {
   }
 };
 
+//Search products
+export const searchProducts = async (req: Request, res: Response) => {
+  const { name, brandId, categoryId } = req.query;
+  const filter: any = {};
+  if (name) {
+    filter.name = { $regex: name, $options: 'i' };
+  }
+  if (brandId) {
+    filter.brandId = brandId;
+  }
+  if (categoryId) {
+    filter.categoryId = categoryId;
+  }
+
+  try {
+    const products = await Product.find(filter);
+    res.json(products);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 // Get a specific product by ID
 export const getProductById = async (req: Request, res: Response) => {
   try {

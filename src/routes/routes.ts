@@ -16,7 +16,7 @@ const router = express.Router();
 
 /** Product Routes*/
 router.post('/products', createProduct);
-router.get('/products/filter', searchProducts);
+router.get('/products/search', searchProducts);
 router.get('/products', getProducts);
 router.get('/products/:id', getProductById);
 router.put('/products/:id', updateProduct);

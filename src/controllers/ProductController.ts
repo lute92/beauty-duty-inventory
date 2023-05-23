@@ -4,51 +4,89 @@ import Product from '../models/Product';
 // Create a new product
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, price, quantity, categoryId, currencyId, brandId } = req.body;
+    const { name, description, brand, price, quantity, currency, category } = req.body;
     const product = new Product({
       name,
       description,
+      brand,
       price,
       quantity,
-      currencyId,
-      brandId,
-      categoryId
+      currency,
+      category
     });
     await product.save();
-    res.status(201).json(product);
+    res.status(201).json({ message: 'Product created successfully', product });
   } catch (error) {
-    console.log(error)
     res.status(500).json({ error: 'Failed to create product' });
   }
 };
 
 // Get all products
 export const getProducts = async (req: Request, res: Response) => {
+
+  const page = req.query.page || 1; // Current page number
+  const limit = req.query.limit || 10; // Number of products per page
+
   try {
-    const products = await Product.find();
-    res.json(products);
+
+    const totalProducts = await Product.countDocuments();
+    const totalPages = Math.ceil(totalProducts / Number(limit));
+
+    const products = await Product.find({})
+      .populate('category', 'name')
+      .populate('brand', 'name')
+      .populate('currency', 'name')
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+
+
+    res.json({
+      products,
+      page,
+      totalPages
+    });
+
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 };
 
 //Search products
 export const searchProducts = async (req: Request, res: Response) => {
+  const page = req.query.page || 1; // Current page number
+  const limit = req.query.limit || 10; // Number of products per page
+
   const { name, brandId, categoryId } = req.query;
   const filter: any = {};
   if (name) {
     filter.name = { $regex: name, $options: 'i' };
   }
   if (brandId) {
-    filter.brandId = brandId;
+    filter.brand = brandId;
   }
   if (categoryId) {
-    filter.categoryId = categoryId;
+    filter.category = categoryId;
   }
 
   try {
-    const products = await Product.find(filter);
-    res.json(products);
+
+    const totalProducts = await Product.countDocuments();
+    const totalPages = Math.ceil(totalProducts / Number(limit));
+
+    const products = await Product.find(filter)
+      .populate('category', 'name')
+      .populate('brand', 'name')
+      .populate('currency', 'name')
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+
+    res.json({
+      products,
+      page,
+      totalPages
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });

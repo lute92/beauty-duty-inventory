@@ -12,4 +12,4 @@ const customerSchema: Schema = new Schema({
   phoneNumber: { type: String, required: false }
 }, { timestamps: true });
 
-export default mongoose.model<ICustomer>('customers', customerSchema);
+export default mongoose.model<ICustomer>('customer', customerSchema);

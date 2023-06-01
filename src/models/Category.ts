@@ -10,4 +10,4 @@ const categorySchema: Schema = new Schema({
   description: { type: String, required: false }
 }, { timestamps: true });
 
-export default mongoose.model<ICategory>('categories', categorySchema);
+export default mongoose.model<ICategory>('category', categorySchema);

@@ -10,4 +10,4 @@ const brandSchema: Schema = new Schema({
   description: { type: String, required: false }
 }, { timestamps: true });
 
-export default mongoose.model<IBrand>('brands', brandSchema);
+export default mongoose.model<IBrand>('brand', brandSchema);

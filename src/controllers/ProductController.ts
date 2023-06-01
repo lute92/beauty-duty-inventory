@@ -4,20 +4,20 @@ import Product from '../models/Product';
 // Create a new product
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, brand, price, quantity, currency, category } = req.body;
+    const { name, description, brand, category, sellingPrice } = req.body;
     const product = new Product({
       name,
       description,
       brand,
-      price,
-      quantity,
-      currency,
-      category
+      category,
+      sellingPrice
     });
-    await product.save();
+    await product.save().catch((err)=> {
+      console.log(err);
+    });
     res.status(201).json({ message: 'Product created successfully', product });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create product' });
+    res.status(500).json(error);
   }
 };
 
@@ -35,7 +35,6 @@ export const getProducts = async (req: Request, res: Response) => {
     const products = await Product.find({})
       .populate('category', 'name')
       .populate('brand', 'name')
-      .populate('currency', 'name')
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit));
 
@@ -77,7 +76,6 @@ export const searchProducts = async (req: Request, res: Response) => {
     const products = await Product.find(filter)
       .populate('category', 'name')
       .populate('brand', 'name')
-      .populate('currency', 'name')
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit));
 

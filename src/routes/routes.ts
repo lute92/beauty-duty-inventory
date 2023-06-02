@@ -5,6 +5,7 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
+  searchProducts,
 } from '../controllers/ProductController';
 import { createCurrency, deleteCurrency, getCurrencies, getCurrencyById, updateCurrency } from '../controllers/CurrencyController';
 import { createCategory, deleteCategory, getCategories, getCategoryById, updateCategory } from '../controllers/CategoryController';
@@ -14,11 +15,12 @@ import { createCustomer, deleteCustomer, getCustomerById, getCustomers, updateCu
 const router = express.Router();
 
 /** Product Routes*/
-router.post('/product', createProduct);
+router.post('/products', createProduct);
+router.get('/products/search', searchProducts);
 router.get('/products', getProducts);
-router.get('/product/:id', getProductById);
-router.put('/product/:id', updateProduct);
-router.delete('/product/:id', deleteProduct);
+router.get('/products/:id', getProductById);
+router.put('/products/:id', updateProduct);
+router.delete('/products/:id', deleteProduct);
 
 /** Currency Routes*/
 

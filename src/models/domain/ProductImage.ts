@@ -11,4 +11,4 @@ const productImageSchema: Schema = new Schema({
   url: { type: String, required: false }
 }, { timestamps: true });
 
-export default mongoose.model<IProductImage>('ProductIamge', productImageSchema);
+export default mongoose.model<IProductImage>('image', productImageSchema);

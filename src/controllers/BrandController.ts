@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Brand, { IBrand } from '../models/Brand';
+import Brand, { IBrand } from '../models/domain/Brand';
 
 export const createBrand = async (req: Request, res: Response): Promise<void> => {
   try {

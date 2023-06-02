@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Customer, { ICustomer } from '../models/Customer';
+import Customer, { ICustomer } from '../models/domain/Customer';
 
 export const createCustomer = async (req: Request, res: Response): Promise<void> => {
   try {

@@ -3,9 +3,6 @@ import { Service } from '../src/service';
 import Category from '../src/models/Category';
 import Brand from '../src/models/Brand';
 
-const app = new Service(3000).getApp();
-
-
 describe('Product Controller', () => {
     let app:any;
     let server:any;

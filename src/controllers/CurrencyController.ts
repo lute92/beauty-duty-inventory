@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Currency, { ICurrency } from '../models/Currency';
+import Currency, { ICurrency } from '../models/domain/Currency';
 
 export const createCurrency = async (req: Request, res: Response): Promise<void> => {
   try {

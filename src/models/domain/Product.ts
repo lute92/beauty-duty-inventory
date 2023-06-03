@@ -1,6 +1,4 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { IBrand } from './Brand';
-import { ICategory } from './Category';
 
 export interface IProduct extends Document {
   name: string,

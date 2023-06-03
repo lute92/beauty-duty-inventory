@@ -41,7 +41,9 @@ export const getProducts = async (req: Request, res: Response) => {
       .populate('category', 'name')
       .populate('brand', 'name')
       .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit)).lean().exec();
+      .limit(Number(limit))
+      .lean()
+      .exec();
 
     const productIds: string[] = products.map((product: IProduct) => product._id);
 
@@ -55,19 +57,19 @@ export const getProducts = async (req: Request, res: Response) => {
       stockMap.set(item._id.toString(), item.totalQuantity);
     });
 
-   products.map((product: IProduct) => {
-    data.push(
-      {
-        productId: product._id,
-        description: product.description,
-        productName: product.name,
-        sellingPrice: product.sellingPrice,
-        category: product.category,
-        brand: product.brand,
-        totalQuantity: stockMap.get(product._id.toString()) || 0,
-      }
-    )
-   });
+    products.map((product: IProduct) => {
+      data.push(
+        {
+          productId: product._id,
+          description: product.description,
+          productName: product.name,
+          sellingPrice: product.sellingPrice,
+          category: product.category,
+          brand: product.brand,
+          totalQuantity: stockMap.get(product._id.toString()) || 0,
+        }
+      )
+    });
 
     res.status(200).json({
       data,

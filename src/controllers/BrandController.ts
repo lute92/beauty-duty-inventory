@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Brand, { IBrand } from '../models/domain/Brand';
+import { IGetAllBrands } from '../models/response/IGetAllBrands';
 
 export const createBrand = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -12,10 +13,55 @@ export const createBrand = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-export const getBrands = async (_req: Request, res: Response): Promise<void> => {
+export const getBrands = async (req: Request, res: Response): Promise<void> => {
+  const page = req.query.page || 0; // Current page number
+  const limit = req.query.limit || 0; // Number of products per page
+
+  const totalBrands = await Brand.countDocuments();
+  const totalPages = Math.ceil(totalBrands / Number(limit));
+  const data: IGetAllBrands[] = [];
+
+  const {name, description} = req.query;
+  const filter:any ={};
+
+  if (!/^\s*$/.test(name as string)) {
+    filter.name = { $regex: name, $options: 'i' };
+  }
+
+  if (!/^\s*$/.test(description as string)) {
+    filter.description = { $regex: description, $options: 'i' };
+  }
+
   try {
-    const brands: IBrand[] = await Brand.find();
-    res.status(200).json(brands);
+    let brands: IBrand[] = [];
+    if (page == 0 && limit == 0) {//No Paging Params have given
+      brands = await Brand.find(filter)
+        .lean()
+        .exec();
+    } else {
+
+      brands = await Brand.find(filter)// Requested with paging params
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .lean()
+        .exec();
+    }
+
+
+    brands.map((brand: IBrand) => {
+      data.push({
+        brandId: brand._id,
+        name: brand.name,
+        description: brand.description
+      })
+    });
+
+    res.status(200).json({
+      data,
+      page,
+      totalPages
+    });
+
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve brands' });
   }

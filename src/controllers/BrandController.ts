@@ -14,21 +14,22 @@ export const createBrand = async (req: Request, res: Response): Promise<void> =>
 };
 
 export const getBrands = async (req: Request, res: Response): Promise<void> => {
-  const page = req.query.page || 0; // Current page number
-  const limit = req.query.limit || 0; // Number of products per page
+  const page = req.query.page || 0;
+  const limit = req.query.limit || 0;
+  const name = req.query.name as string;
+  const description = req.query.description as string;
 
   const totalBrands = await Brand.countDocuments();
   const totalPages = Math.ceil(totalBrands / Number(limit));
   const data: IGetAllBrands[] = [];
 
-  const {name, description} = req.query;
+  
   const filter:any ={};
 
-  if (!/^\s*$/.test(name as string)) {
+  if(name?.length > 0){
     filter.name = { $regex: name, $options: 'i' };
   }
-
-  if (!/^\s*$/.test(description as string)) {
+  if(description?.length > 0){
     filter.description = { $regex: description, $options: 'i' };
   }
 

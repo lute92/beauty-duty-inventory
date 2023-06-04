@@ -1,25 +1,25 @@
 import { Request, Response } from 'express';
 import Product, { IProduct } from '../models/domain/Product';
 import { IGetAllProducts } from '../models/response/IGetAllProducts';
-import Stock, { IStock } from '../models/domain/Stock';
-import Brand, { IBrand } from '../models/domain/Brand';
-import Category, { ICategory } from '../models/domain/Category';
+import Stock from '../models/domain/Stock';
 
 // Create a new product
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, brand, category, sellingPrice } = req.body;
+    const { productName, description, brand, category, sellingPrice } = req.body;
     const product = new Product({
-      name,
+      name: productName,
       description,
       brand,
       category,
       sellingPrice
     });
+    
     await product.save().catch((err) => {
       console.log(err);
     });
-    res.status(201).json({ message: 'Product created successfully', product });
+
+    res.status(201).json({ message: "Product created."});
   } catch (error) {
     res.status(500).json(error);
   }
@@ -104,22 +104,51 @@ export const searchProducts = async (req: Request, res: Response) => {
 
     const totalProducts = await Product.countDocuments();
     const totalPages = Math.ceil(totalProducts / Number(limit));
+    const data: IGetAllProducts[] = [];
 
-    const products = await Product.find(filter)
+    const products: IProduct[] = await Product.find(filter)
       .populate('category', 'name')
       .populate('brand', 'name')
       .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean()
+      .exec();
 
-    res.json({
-      products,
+    const productIds: string[] = products.map((product: IProduct) => product._id);
+
+    const stockAggregation: any[] = await Stock.aggregate([
+      { $match: { product: { $in: productIds } } },
+      { $group: { _id: '$product', totalQuantity: { $sum: '$quantity' } } },
+    ]);
+
+    const stockMap: Map<string, number> = new Map();
+    stockAggregation.forEach((item: any) => {
+      stockMap.set(item._id.toString(), item.totalQuantity);
+    });
+
+    products.map((product: IProduct) => {
+      data.push(
+        {
+          productId: product._id,
+          description: product.description,
+          productName: product.name,
+          sellingPrice: product.sellingPrice,
+          category: product.category,
+          brand: product.brand,
+          totalQuantity: stockMap.get(product._id.toString()) || 0,
+        }
+      )
+    });
+
+    res.status(200).json({
+      data,
       page,
       totalPages
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.log(error);
+    res.status(500).json({ error: 'Failed to fetch products' });
   }
 }
 

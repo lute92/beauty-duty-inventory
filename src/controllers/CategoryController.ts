@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Category, { ICategory } from '../models/domain/Category';
+import { IGetAllCategories } from '../models/response/IGetAllCategories';
 
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -12,10 +13,55 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const getCategories = async (_req: Request, res: Response): Promise<void> => {
+export const getCategories = async (req: Request, res: Response): Promise<void> => {
+  const page = req.query.page || 0; // Current page number
+  const limit = req.query.limit || 0; // Number of products per page
+  const name = req.query.name as string;
+  const description = req.query.description as string;
+
+  const totalRecords = await Category.countDocuments();
+  const totalPages = Math.ceil(totalRecords / Number(limit));
+  const data: IGetAllCategories[] = [];
+
+  const filter:any ={};
+
+  if(name?.length > 0){
+    filter.name = { $regex: name, $options: 'i' };
+  }
+  if(description?.length > 0){
+    filter.description = { $regex: description, $options: 'i' };
+  }
+
   try {
-    const categories: ICategory[] = await Category.find();
-    res.status(200).json(categories);
+    let categories: ICategory[] = [];
+    if (page == 0 && limit == 0) {//No Paging Params have given
+      categories = await Category.find(filter)
+        .lean()
+        .exec();
+    } else {
+
+      categories = await Category.find(filter)// Requested with paging params
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .lean()
+        .exec();
+    }
+
+
+    categories.map((category: ICategory) => {
+      data.push({
+        categoryId: category._id,
+        name: category.name,
+        description: category.description
+      })
+    });
+
+    res.status(200).json({
+      data,
+      page,
+      totalPages
+    });
+
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve categories' });
   }

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import Purchase from '../models/Purchase';
-import PurchaseDetail from '../models/PurchaseDetail';
-import Stock from '../models/Stock';
+import Purchase from '../models/domain/Purchase';
+import PurchaseDetail from '../models/domain/PurchaseDetail';
+import Stock from '../models/domain/Stock';
 
 export const createPurchase = async (req: Request, res: Response) => {
     try {

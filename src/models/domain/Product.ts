@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { IProductImage } from './ProductImage';
 
 export interface IProduct extends Document {
   _id:string,

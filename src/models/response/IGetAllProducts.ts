@@ -1,8 +1,5 @@
-
-import mongoose from 'mongoose';
-import { IBrand } from '../domain/Brand';
-import { ICategory } from '../domain/Category';
 import { ObjectId } from 'mongodb';
+import { IProductImage } from '../domain/ProductImage';
 
 export interface IGetAllProducts {
     productId: string;
@@ -11,5 +8,6 @@ export interface IGetAllProducts {
     sellingPrice: Number;
     category: ObjectId;
     brand: ObjectId;
-    totalQuantity: Number;
+    totalQuantity: Number,
+    images?: IProductImage[]
 }

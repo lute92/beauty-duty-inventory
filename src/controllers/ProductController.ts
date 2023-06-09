@@ -57,22 +57,31 @@ export const createProduct = async (req: Request, res: Response) => {
 // Get all products
 export const getProducts = async (req: Request, res: Response) => {
 
-  const page = req.query.page || 1; // Current page number
-  const limit = req.query.limit || 10; // Number of products per page
+  const page = req.query.page || 0; // Current page number
+  const limit = req.query.limit || 0; // Number of products per page
 
   try {
 
     const totalProducts = await Product.countDocuments();
     const totalPages = Math.ceil(totalProducts / Number(limit));
     const data: IGetAllProducts[] = [];
+    let products: IProduct[] = [];
 
-    const products: IProduct[] = await Product.find()
+    if (page == 0 && limit == 0) {//No Paging Params have given
+      products = await Product.find()
+      .lean()
+      .exec();
+    }
+    else{
+      products = await Product.find()
       .populate('category')
       .populate('brand')
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit))
       .lean()
       .exec();
+    }
+    
 
     const productIds: string[] = products.map((product: IProduct) => product._id);
 

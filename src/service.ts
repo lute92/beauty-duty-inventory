@@ -7,6 +7,7 @@ const cors = require('cors');
 
 const DB_NAME = process.env.DB_NAME || "test";
 const DB_URL = process.env.MONGO_URL || "mongodb+srv://admin:QyAYuqZ7shHzs0ZX@cluster0.hxyfkm5.mongodb.net/Test";
+/* const DB_URL = process.env.MONGO_URL || "mongodb://localhost:27017/test" */
 
 class Service {
     private app: Application;

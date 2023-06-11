@@ -133,8 +133,8 @@ export const getProducts = async (req: Request, res: Response) => {
 
 //Search products
 export const searchProducts = async (req: Request, res: Response) => {
-  const page = req.query.page || 1; // Current page number
-  const limit = req.query.limit || 10; // Number of products per page
+  const page = req.query.page || 0; // Current page number
+  const limit = req.query.limit || 0; // Number of products per page
 
   const { name, brandId, categoryId } = req.query;
   const filter: any = {};
@@ -153,14 +153,22 @@ export const searchProducts = async (req: Request, res: Response) => {
     const totalProducts = await Product.countDocuments();
     const totalPages = Math.ceil(totalProducts / Number(limit));
     const data: IGetAllProducts[] = [];
+    let products: IProduct[] = [];
 
-    const products: IProduct[] = await Product.find(filter)
-      .populate('category', 'name')
-      .populate('brand', 'name')
+    if (page == 0 && limit == 0) {//No Paging Params have given
+      products = await Product.find(filter)
+      .lean()
+      .exec();
+    }
+    else{
+      products = await Product.find(filter)
+      .populate('category')
+      .populate('brand')
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit))
       .lean()
       .exec();
+    }
 
     const productIds: string[] = products.map((product: IProduct) => product._id);
 
@@ -174,33 +182,34 @@ export const searchProducts = async (req: Request, res: Response) => {
       stockMap.set(item._id.toString(), item.totalQuantity);
     });
 
-    products.map((product: IProduct) => {
+    const processArray = async (): Promise<any[]> => {
 
-      ProductImage.find({ "productId": product._id }).lean()
-        .exec().then((productImages) => {
-          data.push(
-            {
-              productId: product._id,
-              description: product.description,
-              productName: product.name,
-              sellingPrice: product.sellingPrice,
-              category: product.category,
-              brand: product.brand,
-              totalQuantity: stockMap.get(product._id.toString()) || 0,
-              images: productImages
-            }
-          )
-        })
+      const promises = products.map(async (product: IProduct) => {
+        let productRes: IGetAllProducts = {
+          productId: product._id,
+          description: product.description,
+          productName: product.name,
+          sellingPrice: product.sellingPrice,
+          category: product.category,
+          brand: product.brand,
+          totalQuantity: stockMap.get(product._id.toString()) || 0,
+          images: await ProductImage.find({ product: product._id }).exec()
+        }
 
+        return productRes;
+      });
 
-    });
+      const results = await Promise.all(promises);
+      return results;
+    }
 
-    res.status(200).json({
-      data,
-      page,
-      totalPages
-    });
-
+    processArray().then((data) => {
+      res.status(200).json({
+        data,
+        page,
+        totalPages
+      });
+    })
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Failed to fetch products' });

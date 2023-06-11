@@ -11,8 +11,17 @@ import { createCurrency, deleteCurrency, getCurrencies, getCurrencyById, updateC
 import { createCategory, deleteCategory, getCategories, getCategoryById, updateCategory } from '../controllers/CategoryController';
 import { createBrand, deleteBrand, getBrandById, getBrands, updateBrand } from '../controllers/BrandController';
 import { createCustomer, deleteCustomer, getCustomerById, getCustomers, updateCustomer } from '../controllers/CustomerController';
+import { createPurchase, getAllPurchaseInfo, getPurchaseInfo } from '../controllers/PurchaseController';
 
 const router = express.Router();
+
+/** Product Routes*/
+router.post('/purchase', createPurchase);
+/* router.get('/purchases/search', searchProducts); */
+router.get('/purchases', getAllPurchaseInfo);
+router.get('/purchases/:id', getPurchaseInfo);
+/* router.put('/products/:id', updateProduct);
+router.delete('/products/:id', deleteProduct); */
 
 /** Product Routes*/
 router.post('/products', createProduct);

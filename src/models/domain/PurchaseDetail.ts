@@ -1,3 +1,4 @@
+import { Timestamp } from 'mongodb';
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPurchaseDetail extends Document {
@@ -6,18 +7,18 @@ export interface IPurchaseDetail extends Document {
     quantity: number,
     purchasePrice: number,
     itemCost: number,
-    expDate: number,
-    mnuDate: number
+    expDate: Timestamp,
+    mnuDate: Timestamp
 }
 
 const purchaseDetailSchema: Schema = new Schema({
-    Purchase: { type: Schema.Types.ObjectId, ref: 'purchase', required: true },
-    Product: { type: Schema.Types.ObjectId, ref: 'product', required: true },
-    Quantity: { type: Number, required: true },
-    PurchasePrice: { type: Number, required: true },
-    ItemCost: { type: Number, required: false },
-    ExpDate: { type: Number, required: false },
-    MnuDate: { type: Number, required: false }
+    purchase: { type: Schema.Types.ObjectId, ref: 'purchase', required: true },
+    product: { type: Schema.Types.ObjectId, ref: 'product', required: true },
+    quantity: { type: Number, required: true },
+    purchasePrice: { type: Number, required: true },
+    itemCost: { type: Number, required: false },
+    expDate: { type: Date, required: false },
+    mnuDate: { type: Date, required: false }
 }, { timestamps: true });
 
 export default mongoose.model<IPurchaseDetail>('purchaseDetail', purchaseDetailSchema);

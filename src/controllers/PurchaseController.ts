@@ -5,39 +5,44 @@ import Stock from '../models/domain/Stock';
 
 export const createPurchase = async (req: Request, res: Response) => {
     try {
-        const { purchaseDate, currency, exchangeRate, note, details } = req.body;
+        const { purchaseDate, currency, exchangeRate, note, extraCost, purchaseDetails } = req.body;
 
         // Create a new purchase
         const purchase = new Purchase({
             purchaseDate,
-            currency,
+            currency: currency.currencyId,
             exchangeRate,
+            extraCost,
             note
         });
         await purchase.save();
 
         // Create purchase details
-        const purchaseDetails = details.map((detail: any) => ({
+        const details = purchaseDetails.map((detail: any) => ({
             purchase: purchase._id,
-            product: detail.product,
+            product: detail.product.productId,
             quantity: detail.quantity,
             purchasePrice: detail.purchasePrice,
             itemCost: detail.itemCost,
             expDate: detail.expDate,
             mnuDate: detail.mnuDate
         }));
-        await PurchaseDetail.insertMany(purchaseDetails);
+        await PurchaseDetail.insertMany(details);
+
+
+        const itemCost = purchase.extraCost / purchaseDetails.length;
 
         // Save purchase and purchase details to stock
         const stockItems = purchaseDetails.map((detail: any) => ({
-            purchase: detail.purchase,
-            product: detail.product,
+            purchase: purchase._id,
+            product: detail.product.productId,
             quantity: detail.quantity,
             purchasePrice: detail.purchasePrice,
-            itemCost: detail.itemCost,
+            itemCost: itemCost,
             expDate: detail.expDate,
             mnuDate: detail.mnuDate
         }));
+
         await Stock.insertMany(stockItems);
 
         res.status(201).json({ message: 'Purchase created successfully', purchase });

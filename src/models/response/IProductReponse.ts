@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { IProductImage } from '../domain/ProductImage';
 
-export interface IGetAllProducts {
+export interface IProductResponse {
     productId: string;
     productName: string;
     description: string;

@@ -16,7 +16,7 @@ import { createPurchase, getAllPurchaseInfo, getPurchaseInfo } from '../controll
 const router = express.Router();
 
 /** Product Routes*/
-router.post('/purchase', createPurchase);
+router.post('/purchases', createPurchase);
 /* router.get('/purchases/search', searchProducts); */
 router.get('/purchases', getAllPurchaseInfo);
 router.get('/purchases/:id', getPurchaseInfo);

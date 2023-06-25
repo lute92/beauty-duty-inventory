@@ -53,21 +53,50 @@ export const createPurchase = async (req: Request, res: Response) => {
 
 
 export const getAllPurchaseInfo = async (req: Request, res: Response) => {
-    try {
-        const { purchaseDate } = req.query;
 
-        let filter = {};
-        if (purchaseDate) {
-            // If purchaseDate parameter is provided, filter the purchases by purchaseDate
-            filter = { purchaseDate };
+    try {
+        const page = Number(req.query.page) || 0; // Current page number
+        const limit = Number(req.query.limit) || 0; // Number of products per page
+
+        const totalPurchases = await Purchase.countDocuments();
+        const totalPages = Math.ceil(totalPurchases / limit);
+
+        let purchases = [];
+
+        if (page === 0 && limit === 0) {
+            // No Paging Params have given
+            purchases = await Purchase.find().lean().exec();
+        } else {
+            purchases = await Purchase.find()
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .lean()
+                .exec();
         }
 
-        // Find the purchases based on the filter
-        const purchases = await Purchase.find(filter);
 
-        res.json(purchases);
+        const data = await Promise.all(
+            purchases.map(async (purchase) => {
+                const purchaseRes = {
+                    purchaseId: purchase._id,
+                    purchaseDate: purchase.purchaseDate,
+                    currency: purchase.currency,
+                    exchangeRate: purchase.exchangeRate,
+                    extraCost: purchase.extraCost,
+                    note: purchase.note
+                };
+                return purchaseRes;
+            })
+        );
+
+        res.status(200).json({
+            data,
+            page,
+            totalPages,
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to get purchase information' });
+        res.status(500).json({ message: 'Failed to get purchase information', error: error });
+
     }
 };
 

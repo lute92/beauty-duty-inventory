@@ -68,6 +68,7 @@ export const getAllPurchaseInfo = async (req: Request, res: Response) => {
             purchases = await Purchase.find().lean().exec();
         } else {
             purchases = await Purchase.find()
+                .populate('currency')
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .lean()
@@ -102,22 +103,28 @@ export const getAllPurchaseInfo = async (req: Request, res: Response) => {
 
 export const getPurchaseInfo = async (req: Request, res: Response) => {
     try {
-        const { purchaseId } = req.params;
+        const { id } = req.params;
 
         // Find the purchase by ID
-        const purchase = await Purchase.findById(purchaseId);
+        const purchase = await Purchase.findById(id)
+            .populate('currency')
+            .lean()
+            .exec();
 
         if (!purchase) {
             return res.status(404).json({ error: 'Purchase not found' });
         }
 
         // Find the purchase details for the given purchase ID
-        const purchaseDetails = await PurchaseDetail.find({ purchase: purchase._id });
+        const purchaseDetails = await PurchaseDetail.find({ purchase: purchase._id })
+            .populate('product')
+            .lean()
+            .exec();
 
         // Find the stock items for the given purchase ID
-        const stockItems = await Stock.find({ purchase: purchase._id });
+        //const stockItems = await Stock.find({ purchase: purchase._id });
 
-        res.json({ purchase, purchaseDetails, stockItems });
+        res.json({ purchase, purchaseDetails });
     } catch (error) {
         res.status(500).json({ error: 'Failed to get purchase information' });
     }

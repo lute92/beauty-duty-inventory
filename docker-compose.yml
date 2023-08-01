@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  beautyduty-inventory:
+    image: sithukyaw1992/beautyduty-inventory:0.0.1
+    container_name: beautyduty-inventory
+    ports:
+      - "4900:4900"

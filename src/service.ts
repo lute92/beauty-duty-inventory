@@ -1,29 +1,33 @@
-import bodyParser from 'body-parser';
 import express, { Application, Request, Response } from 'express';
 import mongoose, { ConnectOptions } from 'mongoose';
 import routes from './routes/routes';
-
-const cors = require('cors');
-
-const DB_NAME = process.env.DB_NAME || "test";
-const DB_URL = process.env.MONGO_URL || "mongodb+srv://admin:QyAYuqZ7shHzs0ZX@cluster0.hxyfkm5.mongodb.net/Test";
-/* const DB_URL = process.env.MONGO_URL || "mongodb://localhost:27017/test" */
+import dotenv from 'dotenv';
+import cors from 'cors';
+import bodyParser from 'body-parser';
 
 class Service {
     private app: Application;
-    private port: number;
+    private port: string;
     private dbConnection: mongoose.Connection;
+    private DB_NAME: string;
+    private DB_URL: string;
 
-
-    constructor(port: number) {
+    constructor() {
+        dotenv.config();
         this.app = express();
-        this.port = port;
+        this.port = process.env.INVENTORY_SERVICE_PORT || "4900";
         this.dbConnection = mongoose.connection;
+
+        this.DB_NAME = process.env.MONGO_DBNAME || "test";
+        this.DB_URL = process.env.MONGO_URL || "mongodb://localhost:27017/Test";
     }
 
     public start(): any {
         this.connectToDatabase();
         this.configureRoutes();
+
+        this.app.use(bodyParser.json({ limit: '50mb' }));
+        this.app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
         this.app.use(cors({
             origin: '*'
@@ -34,13 +38,9 @@ class Service {
         // Routes
         this.app.use(routes);
 
-        /* this.app.listen(this.port, () => {
-            console.log(`Server started on port ${this.port}`);
-        }); */
-
         return this.app.listen(this.port, () => {
             console.log(`Server started on port ${this.port}`);
-          });
+        });
     }
 
     public stop(): void {
@@ -53,13 +53,12 @@ class Service {
     }
 
     private connectToDatabase(): void {
-
-        mongoose.connect(DB_URL, {
+        mongoose.connect(this.DB_URL, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         } as ConnectOptions)
             .then(() => {
-                console.log('Connected to MongoDB');
+                console.log(`Connected to MongoDB:${this.DB_URL}`);
             })
             .catch((error) => {
                 console.error('MongoDB connection error:', error);

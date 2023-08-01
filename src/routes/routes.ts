@@ -11,7 +11,8 @@ import { createCurrency, deleteCurrency, getCurrencies, getCurrencyById, updateC
 import { createCategory, deleteCategory, getCategories, getCategoryById, updateCategory } from '../controllers/CategoryController';
 import { createBrand, deleteBrand, getBrandById, getBrands, updateBrand } from '../controllers/BrandController';
 import { createCustomer, deleteCustomer, getCustomerById, getCustomers, updateCustomer } from '../controllers/CustomerController';
-import { createPurchase, getAllPurchaseInfo, getPurchaseInfo } from '../controllers/PurchaseController';
+import { createPurchase, deletePurchaseInfo, getAllPurchaseInfo, getPurchaseInfo } from '../controllers/PurchaseController';
+import { importDataFromExcel } from '../controllers/ImportExcelController';
 
 const router = express.Router();
 
@@ -20,8 +21,8 @@ router.post('/purchases', createPurchase);
 /* router.get('/purchases/search', searchProducts); */
 router.get('/purchases', getAllPurchaseInfo);
 router.get('/purchases/:id', getPurchaseInfo);
-/* router.put('/products/:id', updateProduct);
-router.delete('/products/:id', deleteProduct); */
+/* router.put('/products/:id', updateProduct); */
+router.delete('/purchases/:id', deletePurchaseInfo);
 
 /** Product Routes*/
 router.post('/products', createProduct);
@@ -30,6 +31,9 @@ router.get('/products', getProducts);
 router.get('/products/:id', getProductById);
 router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
+
+/**Import Product */
+router.post('/products/import', importDataFromExcel);
 
 /** Currency Routes*/
 
@@ -61,6 +65,8 @@ router.get('/customers', getCustomers);
 router.get('/customers/:id', getCustomerById);
 router.put('/customers/:id', updateCustomer);
 router.delete('/customers/:id', deleteCustomer);
+
+
 
 
 export default router;

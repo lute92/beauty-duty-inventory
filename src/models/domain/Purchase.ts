@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { ICurrency } from './Currency';
 
 export interface IPurchase extends Document {
+  orderNumber:string,
   purchaseDate: Timestamp,
   currency: mongoose.Types.ObjectId,
   exchangeRate: number,
@@ -11,8 +12,9 @@ export interface IPurchase extends Document {
 }
 
 const purchaseSehema: Schema = new Schema({
+  orderNumber: { type: String, required: true },
   purchaseDate: { type: String, required: true },
-  currency: { type: Schema.Types.ObjectId, ref: 'currency', required: true },
+  currency: { type: Schema.Types.ObjectId, ref: 'currency', required: false },
   exchangeRate: { type: Number, required: true },
   extraCost: { type: Number, required: false },
   note: { type: String, required: false }

@@ -19,17 +19,16 @@ export const getBrands = async (req: Request, res: Response): Promise<void> => {
   const name = req.query.name as string;
   const description = req.query.description as string;
 
-  const totalBrands = await Brand.countDocuments();
-  const totalPages = Math.ceil(totalBrands / Number(limit));
+
   const data: IGetAllBrands[] = [];
 
-  
-  const filter:any ={};
 
-  if(name?.length > 0){
+  const filter: any = {};
+
+  if (name?.length > 0) {
     filter.name = { $regex: name, $options: 'i' };
   }
-  if(description?.length > 0){
+  if (description?.length > 0) {
     filter.description = { $regex: description, $options: 'i' };
   }
 
@@ -48,6 +47,8 @@ export const getBrands = async (req: Request, res: Response): Promise<void> => {
         .exec();
     }
 
+    const totalBrands = await Brand.countDocuments();
+    const totalPages = Math.ceil(totalBrands / Number(limit));
 
     brands.map((brand: IBrand) => {
       data.push({

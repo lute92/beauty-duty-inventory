@@ -40,6 +40,7 @@ export const createProduct = async (req: Request, res: Response) => {
     res.status(201).json({ message: "Product created.", product });
 
   } catch (error) {
+    console.error("Error creating product:", error);
     res.status(400).json({ message: "Failed to create product.", error });
   }
 };
@@ -49,6 +50,8 @@ export const createProduct = async (req: Request, res: Response) => {
 // Get all products
 export const getProducts = async (req: Request, res: Response) => {
   try {
+    console.log("Fetching Products");
+    
     const page = Number(req.query.page) || 0; // Current page number
     const limit = Number(req.query.limit) || 0; // Number of products per page
 
@@ -105,7 +108,7 @@ export const getProducts = async (req: Request, res: Response) => {
       totalPages,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error getting products:", error);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 };
@@ -192,7 +195,7 @@ export const searchProducts = async (req: Request, res: Response) => {
       });
     })
   } catch (error) {
-    console.log(error);
+    console.error("Error searching products:", error);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 }
@@ -220,6 +223,7 @@ export const getProductById = async (req: Request, res: Response) => {
     }
 
   } catch (error) {
+    console.error("Error getting product by Id:", error);
     res.status(500).json({ error: 'Failed to fetch product' });
   }
 };
@@ -252,6 +256,7 @@ export const updateProduct = async (req: Request, res: Response) => {
     res.json(updatedProduct);
 
   } catch (error) {
+    console.error("Error updating product:", error);
     res.status(500).json({ error: 'Failed to update product' });
   }
 };
@@ -266,6 +271,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
     }
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
+    console.error("Error deleting product:", error);
     res.status(500).json({ error: 'Failed to delete product' });
   }
 };

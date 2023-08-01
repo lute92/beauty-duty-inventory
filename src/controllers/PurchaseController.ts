@@ -1,56 +1,18 @@
 import { Request, Response } from 'express';
 import Purchase from '../models/domain/Purchase';
-import PurchaseDetail from '../models/domain/PurchaseDetail';
+import PurchaseDetail, { IPurchaseDetail } from '../models/domain/PurchaseDetail';
 import Stock from '../models/domain/Stock';
+import ProductImage from '../models/domain/ProductImage';
+import { savePurchaseInfo } from '../services/PurchaseService';
 
 export const createPurchase = async (req: Request, res: Response) => {
     try {
-        const { purchaseDate, currency, exchangeRate, note, extraCost, purchaseDetails } = req.body;
-
-        // Create a new purchase
-        const purchase = new Purchase({
-            purchaseDate,
-            currency: currency.currencyId,
-            exchangeRate,
-            extraCost,
-            note
-        });
-        await purchase.save();
-
-        // Create purchase details
-        const details = purchaseDetails.map((detail: any) => ({
-            purchase: purchase._id,
-            product: detail.product.productId,
-            quantity: detail.quantity,
-            purchasePrice: detail.purchasePrice,
-            itemCost: detail.itemCost,
-            expDate: detail.expDate,
-            mnuDate: detail.mnuDate
-        }));
-        await PurchaseDetail.insertMany(details);
-
-
-        const itemCost = purchase.extraCost / purchaseDetails.length;
-
-        // Save purchase and purchase details to stock
-        const stockItems = purchaseDetails.map((detail: any) => ({
-            purchase: purchase._id,
-            product: detail.product.productId,
-            quantity: detail.quantity,
-            purchasePrice: detail.purchasePrice,
-            itemCost: itemCost,
-            expDate: detail.expDate,
-            mnuDate: detail.mnuDate
-        }));
-
-        await Stock.insertMany(stockItems);
-
-        res.status(201).json({ message: 'Purchase created successfully', purchase });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create purchase' });
+        await savePurchaseInfo(req.body);
+        res.status(201).json({ message: 'Purchase created successfully' });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message || 'Failed to create purchase' });
     }
 };
-
 
 export const getAllPurchaseInfo = async (req: Request, res: Response) => {
 
@@ -80,6 +42,7 @@ export const getAllPurchaseInfo = async (req: Request, res: Response) => {
             purchases.map(async (purchase) => {
                 const purchaseRes = {
                     purchaseId: purchase._id,
+                    orderNumber: purchase.orderNumber,
                     purchaseDate: purchase.purchaseDate,
                     currency: purchase.currency,
                     exchangeRate: purchase.exchangeRate,
@@ -116,16 +79,44 @@ export const getPurchaseInfo = async (req: Request, res: Response) => {
         }
 
         // Find the purchase details for the given purchase ID
-        const purchaseDetails = await PurchaseDetail.find({ purchase: purchase._id })
+        const _purchaseDetails = await PurchaseDetail.find({ purchase: purchase._id })
             .populate('product')
             .lean()
             .exec();
 
+
+        const purchaseDetails = await Promise.all(
+            _purchaseDetails.map(async (detail: IPurchaseDetail) => {
+                const productImages = await ProductImage.find({ product: detail.product }).exec();
+
+                const { product, ...rest } = detail;
+                const transformedProduct = { ...product, productId: product._id, images: productImages };
+                return { ...rest, product: transformedProduct };
+            })
+        );
+
+        console.log(purchaseDetails);
         // Find the stock items for the given purchase ID
         //const stockItems = await Stock.find({ purchase: purchase._id });
 
         res.json({ purchase, purchaseDetails });
     } catch (error) {
         res.status(500).json({ error: 'Failed to get purchase information' });
+    }
+};
+
+// Delete a purchase
+export const deletePurchaseInfo = async (req: Request, res: Response) => {
+    try {
+        const purchase = await Purchase.findByIdAndRemove(req.params.id);
+        const purchaseDetails = await PurchaseDetail.deleteMany({ purchase: req.params.id });
+        const stocks = await Stock.deleteMany({ purchase: req.params.id });
+
+        if (!purchase) {
+            return res.status(404).json({ error: 'Purchase info not found' });
+        }
+        res.json({ message: 'Purchase info deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete purchase info' });
     }
 };

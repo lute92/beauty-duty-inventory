@@ -1,15 +1,14 @@
 import { Request, Response } from 'express';
 import Product, { IProduct } from '../models/domain/Product';
 import { IProductResponse } from '../models/response/IProductReponse';
-import Stock from '../models/domain/Stock';
 import ProductImage, { IProductImage } from '../models/domain/ProductImage';
 
 // Create a new product
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, brand, category, sellingPrice, productImages } = req.body;
+    const { name, description, brand, category, sellingPrice, productImages, qty, weight, mnuCountry } = req.body;
 
-    const existingProduct = await Product.findOne({ name: name });
+    const existingProduct = await Product.findOne({ name: name, weigth: weight });
     if (existingProduct) {
       return res.status(400).json({ message: "Product name already exists." });
     }
@@ -22,7 +21,10 @@ export const createProduct = async (req: Request, res: Response) => {
       description,
       brand,
       category,
-      sellingPrice
+      sellingPrice,
+      qty,
+      weight,
+      mnuCountry
     });
 
 
@@ -51,7 +53,7 @@ export const createProduct = async (req: Request, res: Response) => {
 export const getProducts = async (req: Request, res: Response) => {
   try {
     console.log("Fetching Products");
-    
+
     const page = Number(req.query.page) || 0; // Current page number
     const limit = Number(req.query.limit) || 0; // Number of products per page
 
@@ -73,18 +75,18 @@ export const getProducts = async (req: Request, res: Response) => {
         .exec();
     }
 
-    const productIds = products.map((product) => product._id);
+    /* const productIds = products.map((product) => product._id);
 
     const stockAggregation = await Stock.aggregate([
       { $match: { product: { $in: productIds } } },
       { $group: { _id: '$product', totalQuantity: { $sum: '$quantity' } } },
     ]);
-
+ 
     const stockMap = new Map();
     stockAggregation.forEach((item) => {
       stockMap.set(item._id.toString(), item.totalQuantity);
     });
-
+*/
     const data = await Promise.all(
       products.map(async (product) => {
         const images = await ProductImage.find({ product: product._id }).exec();
@@ -95,7 +97,7 @@ export const getProducts = async (req: Request, res: Response) => {
           sellingPrice: product.sellingPrice,
           category: product.category,
           brand: product.brand,
-          totalQuantity: stockMap.get(product._id.toString()) || 0,
+          totalQuantity: product.qty || 0,
           images,
         };
         return productRes;
@@ -154,7 +156,7 @@ export const searchProducts = async (req: Request, res: Response) => {
         .exec();
     }
 
-    const productIds: string[] = products.map((product: IProduct) => product._id);
+    /* const productIds: string[] = products.map((product: IProduct) => product._id);
 
     const stockAggregation: any[] = await Stock.aggregate([
       { $match: { product: { $in: productIds } } },
@@ -164,7 +166,7 @@ export const searchProducts = async (req: Request, res: Response) => {
     const stockMap: Map<string, number> = new Map();
     stockAggregation.forEach((item: any) => {
       stockMap.set(item._id.toString(), item.totalQuantity);
-    });
+    }); */
 
     const processArray = async (): Promise<any[]> => {
 
@@ -176,7 +178,7 @@ export const searchProducts = async (req: Request, res: Response) => {
           sellingPrice: product.sellingPrice,
           category: product.category,
           brand: product.brand,
-          totalQuantity: stockMap.get(product._id.toString()) || 0,
+          totalQuantity: product.qty || 0,
           images: await ProductImage.find({ product: product._id }).exec()
         }
 
@@ -213,7 +215,7 @@ export const getProductById = async (req: Request, res: Response) => {
         sellingPrice: product.sellingPrice,
         category: product.category,
         brand: product.brand,
-        totalQuantity: 0,
+        totalQuantity: product.qty,
         images: await ProductImage.find({ product: product._id }).exec()
       }
       res.json(productRes);

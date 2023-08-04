@@ -19,7 +19,7 @@ class Service {
         this.dbConnection = mongoose.connection;
 
         this.DB_NAME = process.env.MONGO_DBNAME || "test";
-        this.DB_URL = process.env.MONGO_URL || "mongodb://localhost:27017/Test";
+        this.DB_URL = `mongodb+srv://${process.env.MONGO_DBUSER}:${process.env.MONGO_DBPASS}@${process.env.MONGO_CLUSTER}/${process.env.MONGO_DBNAME}`;
     }
 
     public start(): any {

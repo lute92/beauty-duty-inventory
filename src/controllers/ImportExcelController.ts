@@ -33,13 +33,25 @@ export const importDataFromExcel = async (req: Request, res: Response) => {
             const product = new Product({
                 name: row.Name?.trim(),
                 description: row.Description?.trim(),
-                sellingPrice: row.Price,
-                weight: row.Weight?.trim()
+                sellingPrice: row.SellingPrice,
+                weight: row.Weight?.trim(),
+                mnuCountry: row.MadeIn?.trim(),
+                qty: row.Qty || 0
             });
 
             // Get the brand and category IDs from the database based on the names in the Excel file
-            const brand = await Brand.findOne({ name: row.Brand?.trim() }); // Replace "Brand" with your actual brand model
-            const category = await Category.findOne({ name: row.Category?.trim() }); // Replace "Category" with your actual category model
+            let brandFilter: any = {};
+            if (row.Brand) {
+                brandFilter.name = { $regex: row.Brand, $options: 'i' };
+            }
+
+            let categoryFilter: any = {};
+            if (row.Category) {
+                categoryFilter.name = { $regex: row.Category, $options: 'i' };
+            }
+
+            const brand = await Brand.findOne(brandFilter); // Replace "Brand" with your actual brand model
+            const category = await Category.findOne(categoryFilter); // Replace "Category" with your actual category model
 
             // If brand or category not found in the database, you can choose to handle it accordingly
             if (!brand || !category) {
@@ -48,13 +60,26 @@ export const importDataFromExcel = async (req: Request, res: Response) => {
                 product.brand = brand._id;
                 product.category = category._id;
 
+
                 // Save the product to the database
-                const existingProduct = await Product.findOne({ name: row.Name.trim() });
+                let filter: any = {};
+
+                if (row.Name) {
+                    filter.name = { $regex: row.Name, $options: 'i' };
+                }
+                if (row.Weight) {
+                    if(row.Weight.trim() === ""){
+                        console.log(`Weight is empty:${row.Name}`)
+                    }
+                    filter.weight = { $regex: row.Weight, $options: 'i' };
+                }
+
+                const existingProduct = await Product.findOne(filter);
                 if (!existingProduct) {
                     await product.save();
                 }
-                else{
-                    console.log("Skipped saving existing product.")
+                else {
+                    console.log(`Skipped saving existing product: ${existingProduct.name}`)
                 }
 
 
@@ -64,7 +89,7 @@ export const importDataFromExcel = async (req: Request, res: Response) => {
                         productId: product._id
                     },
                     quantity: row.Qty,
-                    purchasePrice: 0,
+                    purchasePrice: row.PurchasePrice || 0,
                     itemCost: 0,
                     expDate: row.ExpireDate,
                     mnuDate: row.ManufactureDate

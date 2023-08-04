@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import Purchase from '../models/domain/Purchase';
 import PurchaseDetail, { IPurchaseDetail } from '../models/domain/PurchaseDetail';
-import Stock from '../models/domain/Stock';
 import ProductImage from '../models/domain/ProductImage';
 import { savePurchaseInfo } from '../services/PurchaseService';
 
@@ -88,7 +87,6 @@ export const getPurchaseInfo = async (req: Request, res: Response) => {
         const purchaseDetails = await Promise.all(
             _purchaseDetails.map(async (detail: IPurchaseDetail) => {
                 const productImages = await ProductImage.find({ product: detail.product }).exec();
-
                 const { product, ...rest } = detail;
                 const transformedProduct = { ...product, productId: product._id, images: productImages };
                 return { ...rest, product: transformedProduct };
@@ -110,7 +108,6 @@ export const deletePurchaseInfo = async (req: Request, res: Response) => {
     try {
         const purchase = await Purchase.findByIdAndRemove(req.params.id);
         const purchaseDetails = await PurchaseDetail.deleteMany({ purchase: req.params.id });
-        const stocks = await Stock.deleteMany({ purchase: req.params.id });
 
         if (!purchase) {
             return res.status(404).json({ error: 'Purchase info not found' });

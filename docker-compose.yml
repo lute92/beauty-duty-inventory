@@ -1,8 +1,10 @@
-version: '3.8'
-
+version: '3'
 services:
-  beautyduty-inventory:
-    image: sithukyaw1992/beautyduty-inventory:0.0.1
-    container_name: beautyduty-inventory
+  frontend:
+    image: sithukyaw1992/bdbackend:v0.0.5 # Replace with your Node.js frontend image details from Docker Hub
+    container_name: backend-container
+    build:
+      context: .
+      dockerfile: Dockerfile # Use the name of your Dockerfile if it's not named "Dockerfile"
     ports:
       - "4900:4900"

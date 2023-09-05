@@ -16,55 +16,57 @@ import { importDataFromExcel } from '../controllers/ImportExcelController';
 
 const router = express.Router();
 
+const defaultRoutePrefix = '/api';
+
 /** Purchase Routes*/
-router.post('/purchases', createPurchase);
-/* router.get('/purchases/search', searchProducts); */
-router.get('/purchases', getAllPurchaseInfo);
-router.get('/purchases/:id', getPurchaseInfo);
-/* router.put('/products/:id', updateProduct); */
-router.delete('/purchases/:id', deletePurchaseInfo);
+router.post(defaultRoutePrefix + '/purchases', createPurchase);
+/* router.get(defaultRoutePrefix + '/purchases/search', searchProducts); */
+router.get(defaultRoutePrefix + '/purchases', getAllPurchaseInfo);
+router.get(defaultRoutePrefix + '/purchases/:id', getPurchaseInfo);
+/* router.put(defaultRoutePrefix + '/products/:id', updateProduct); */
+router.delete(defaultRoutePrefix + '/purchases/:id', deletePurchaseInfo);
 
 /** Product Routes*/
-router.post('/products', createProduct);
-router.get('/products/search', searchProducts);
-router.get('/products', getProducts);
-router.get('/products/:id', getProductById);
-router.put('/products/:id', updateProduct);
-router.delete('/products/:id', deleteProduct);
+router.post(defaultRoutePrefix + '/products', createProduct);
+router.get(defaultRoutePrefix + '/products/search', searchProducts);
+router.get(defaultRoutePrefix + '/products', getProducts);
+router.get(defaultRoutePrefix + '/products/:id', getProductById);
+router.put(defaultRoutePrefix + '/products/:id', updateProduct);
+router.delete(defaultRoutePrefix + '/products/:id', deleteProduct);
 
 /**Import Product */
-router.post('/products/import', importDataFromExcel);
+router.post(defaultRoutePrefix + '/products/import', importDataFromExcel);
 
 /** Currency Routes*/
 
-router.post('/currencies', createCurrency);
-router.get('/currencies', getCurrencies);
-router.get('/currencies/:id', getCurrencyById);
-router.put('/currencies/:id', updateCurrency);
-router.delete('/currencies/:id', deleteCurrency);
+router.post(defaultRoutePrefix + '/currencies', createCurrency);
+router.get(defaultRoutePrefix + '/currencies', getCurrencies);
+router.get(defaultRoutePrefix + '/currencies/:id', getCurrencyById);
+router.put(defaultRoutePrefix + '/currencies/:id', updateCurrency);
+router.delete(defaultRoutePrefix + '/currencies/:id', deleteCurrency);
 
 /**Category Routes */
 
-router.post('/categories', createCategory);
-router.get('/categories', getCategories);
-router.get('/categories/:id', getCategoryById);
-router.put('/categories/:id', updateCategory);
-router.delete('/categories/:id', deleteCategory);
+router.post(defaultRoutePrefix + '/categories', createCategory);
+router.get(defaultRoutePrefix + '/categories', getCategories);
+router.get(defaultRoutePrefix + '/categories/:id', getCategoryById);
+router.put(defaultRoutePrefix + '/categories/:id', updateCategory);
+router.delete(defaultRoutePrefix + '/categories/:id', deleteCategory);
 
 /**Brand Routes */
 
-router.post('/brands', createBrand);
-router.get('/brands', getBrands);
-router.get('/brands/:id', getBrandById);
-router.put('/brands/:id', updateBrand);
-router.delete('/brands/:id', deleteBrand);
+router.post(defaultRoutePrefix + '/brands', createBrand);
+router.get(defaultRoutePrefix + '/brands', getBrands);
+router.get(defaultRoutePrefix + '/brands/:id', getBrandById);
+router.put(defaultRoutePrefix + '/brands/:id', updateBrand);
+router.delete(defaultRoutePrefix + '/brands/:id', deleteBrand);
 
 /**Customer Routes */
-router.post('/customers', createCustomer);
-router.get('/customers', getCustomers);
-router.get('/customers/:id', getCustomerById);
-router.put('/customers/:id', updateCustomer);
-router.delete('/customers/:id', deleteCustomer);
+router.post(defaultRoutePrefix + '/customers', createCustomer);
+router.get(defaultRoutePrefix + '/customers', getCustomers);
+router.get(defaultRoutePrefix + '/customers/:id', getCustomerById);
+router.put(defaultRoutePrefix + '/customers/:id', updateCustomer);
+router.delete(defaultRoutePrefix + '/customers/:id', deleteCustomer);
 
 
 

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beautyduty-api
+  namespace: beautyduty-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beautyduty-api
+  template:
+    metadata:
+      labels:
+        app: beautyduty-api
+    spec:
+      containers:
+        - name: beautyduty-container
+          image: sithukyaw1992/bd-backend:v0.0.2
+          ports:
+            - containerPort: 4900

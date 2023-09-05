@@ -13,10 +13,15 @@ import { createBrand, deleteBrand, getBrandById, getBrands, updateBrand } from '
 import { createCustomer, deleteCustomer, getCustomerById, getCustomers, updateCustomer } from '../controllers/CustomerController';
 import { createPurchase, deletePurchaseInfo, getAllPurchaseInfo, getPurchaseInfo } from '../controllers/PurchaseController';
 import { importDataFromExcel } from '../controllers/ImportExcelController';
+import { getUserProfile, login } from '../controllers/UserController';
 
 const router = express.Router();
 
 const defaultRoutePrefix = '/api';
+
+/** Login Routes*/
+router.post(defaultRoutePrefix + '/login', login);
+router.get(defaultRoutePrefix + '/profile', getUserProfile);
 
 /** Purchase Routes*/
 router.post(defaultRoutePrefix + '/purchases', createPurchase);

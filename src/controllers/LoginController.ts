@@ -1,9 +1,9 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import User from '../models/domain/User';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-const SECRET_KEY = 'bdadmin123';
+const JWT_SECRET = process.env.JWT_SECRET || "test"
 
 export const login = async (req: Request, res: Response) => {
     const { username, password } = req.body;
@@ -20,7 +20,7 @@ export const login = async (req: Request, res: Response) => {
         return res.status(401).send('Invalid username or password');
     }
 
-    const token = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token });
 };

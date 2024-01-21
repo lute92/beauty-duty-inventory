@@ -13,7 +13,7 @@ import { createBrand, deleteBrand, getBrandById, getBrands, updateBrand } from '
 import { createCustomer, deleteCustomer, getCustomerById, getCustomers, updateCustomer } from '../controllers/CustomerController';
 import { createPurchase, deletePurchaseInfo, getAllPurchaseInfo, getPurchaseInfo } from '../controllers/PurchaseController';
 import { importDataFromExcel } from '../controllers/ImportExcelController';
-import { login, logout } from '../controllers/UserController';
+import { login, logout } from '../controllers/LoginController';
 import { authenticateJWT } from '../authMiddleware';
 
 const router = express.Router();

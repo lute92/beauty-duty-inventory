@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import Category, { ICategory } from '../models/domain/Category';
 import { IGetAllCategories } from '../models/response/IGetAllCategories';
+import { CategoryModel, ICategory } from '../models/domain/models';
 
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, description }: { name: string; description: string } = req.body;
-    const newCategory: ICategory = new Category({ name, description });
+    const newCategory: ICategory = new CategoryModel({ name, description });
     const savedCategory: ICategory = await newCategory.save();
     res.status(201).json(savedCategory);
   } catch (error) {
@@ -19,9 +19,8 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
   const name = req.query.name as string;
   const description = req.query.description as string;
 
-  const totalRecords = await Category.countDocuments();
+  const totalRecords = await CategoryModel.countDocuments();
   const totalPages = Math.ceil(totalRecords / Number(limit));
-  const data: IGetAllCategories[] = [];
 
   const filter:any ={};
 
@@ -35,29 +34,20 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
   try {
     let categories: ICategory[] = [];
     if (page == 0 && limit == 0) {//No Paging Params have given
-      categories = await Category.find(filter)
+      categories = await CategoryModel.find(filter)
         .lean()
         .exec();
     } else {
 
-      categories = await Category.find(filter)// Requested with paging params
+      categories = await CategoryModel.find(filter)// Requested with paging params
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit))
         .lean()
         .exec();
     }
 
-
-    categories.map((category: ICategory) => {
-      data.push({
-        categoryId: category._id,
-        name: category.name,
-        description: category.description
-      })
-    });
-
     res.status(200).json({
-      data,
+      categories,
       page,
       totalPages
     });
@@ -70,7 +60,7 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
 export const getCategoryById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const category: ICategory | null = await Category.findById(id);
+    const category: ICategory | null = await CategoryModel.findById(id);
     if (category) {
       res.status(200).json(category);
     } else {
@@ -85,7 +75,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
     const { name, description }: { name?: string; description?: string } = req.body;
-    const updatedCategory: ICategory | null = await Category.findByIdAndUpdate(
+    const updatedCategory: ICategory | null = await CategoryModel.findByIdAndUpdate(
       id,
       { name, description },
       { new: true }
@@ -103,7 +93,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
 export const deleteCategory = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const deletedCategory: ICategory | null = await Category.findByIdAndDelete(id);
+    const deletedCategory: ICategory | null = await CategoryModel.findByIdAndDelete(id);
     if (deletedCategory) {
       res.status(200).json({ message: 'Category deleted successfully' });
     } else {

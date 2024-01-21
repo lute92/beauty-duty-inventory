@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import Currency, { ICurrency } from '../models/domain/Currency';
 import { IGetAllCurrencies } from '../models/response/IGetAllCurrencies';
+import { CurrencyModel, ICurrency } from '../models/domain/models';
 
 export const createCurrency = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, description }: { name: string; description: string } = req.body;
-    const newCurrency: ICurrency = new Currency({ name, description });
+    const newCurrency: ICurrency = new CurrencyModel({ name, description });
     const savedCurrency: ICurrency = await newCurrency.save();
     res.status(201).json(savedCurrency);
   } catch (error) {
@@ -19,9 +19,8 @@ export const getCurrencies = async (req: Request, res: Response): Promise<void> 
   const name = req.query.name as string;
   const description = req.query.description as string;
 
-  const totalRecords = await Currency.countDocuments();
+  const totalRecords = await CurrencyModel.countDocuments();
   const totalPages = Math.ceil(totalRecords / Number(limit));
-  const data: IGetAllCurrencies[] = [];
 
   const filter:any ={};
 
@@ -35,12 +34,12 @@ export const getCurrencies = async (req: Request, res: Response): Promise<void> 
   try {
     let currencies: ICurrency[] = [];
     if (page == 0 && limit == 0) {//No Paging Params have given
-      currencies = await Currency.find(filter)
+      currencies = await CurrencyModel.find(filter)
         .lean()
         .exec();
     } else {
 
-      currencies = await Currency.find(filter)// Requested with paging params
+      currencies = await CurrencyModel.find(filter)// Requested with paging params
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit))
         .lean()
@@ -48,16 +47,8 @@ export const getCurrencies = async (req: Request, res: Response): Promise<void> 
     }
 
 
-    currencies.map((currency: ICurrency) => {
-      data.push({
-        currencyId: currency._id,
-        name: currency.name,
-        description: currency.description
-      })
-    });
-
     res.status(200).json({
-      data,
+      currencies,
       page,
       totalPages
     });
@@ -70,7 +61,7 @@ export const getCurrencies = async (req: Request, res: Response): Promise<void> 
 export const getCurrencyById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const currency: ICurrency | null = await Currency.findById(id);
+    const currency: ICurrency | null = await CurrencyModel.findById(id);
     if (currency) {
       res.status(200).json(currency);
     } else {
@@ -85,7 +76,7 @@ export const updateCurrency = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
     const { name, description }: { name?: string; description?: string } = req.body;
-    const updatedCurrency: ICurrency | null = await Currency.findByIdAndUpdate(
+    const updatedCurrency: ICurrency | null = await CurrencyModel.findByIdAndUpdate(
       id,
       { name, description },
       { new: true }
@@ -103,7 +94,7 @@ export const updateCurrency = async (req: Request, res: Response): Promise<void>
 export const deleteCurrency = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const deletedCurrency: ICurrency | null = await Currency.findByIdAndDelete(id);
+    const deletedCurrency: ICurrency | null = await CurrencyModel.findByIdAndDelete(id);
     if (deletedCurrency) {
       res.status(200).json({ message: 'Currency deleted successfully' });
     } else {

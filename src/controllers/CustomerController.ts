@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import Customer, { ICustomer } from '../models/domain/Customer';
+import { CustomerModel, ICustomer } from '../models/domain/models';
 
 export const createCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, address, phoneNumber }: { name: string; address: string; phoneNumber: string } = req.body;
-    const newCustomer: ICustomer = new Customer({ name, address, phoneNumber });
+    const newCustomer: ICustomer = new CustomerModel({ name, address, phoneNumber });
     const savedCustomer: ICustomer = await newCustomer.save();
     res.status(201).json(savedCustomer);
   } catch (error) {
@@ -14,7 +14,7 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
 
 export const getCustomers = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const customers: ICustomer[] = await Customer.find();
+    const customers: ICustomer[] = await CustomerModel.find();
     res.status(200).json(customers);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve customers' });
@@ -24,7 +24,7 @@ export const getCustomers = async (_req: Request, res: Response): Promise<void> 
 export const getCustomerById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const customer: ICustomer | null = await Customer.findById(id);
+    const customer: ICustomer | null = await CustomerModel.findById(id);
     if (customer) {
       res.status(200).json(customer);
     } else {
@@ -39,7 +39,7 @@ export const updateCustomer = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
     const { name, address, phoneNumber }: { name?: string; address?: string; phoneNumber?: string } = req.body;
-    const updatedCustomer: ICustomer | null = await Customer.findByIdAndUpdate(
+    const updatedCustomer: ICustomer | null = await CustomerModel.findByIdAndUpdate(
       id,
       { name, address, phoneNumber },
       { new: true }
@@ -57,7 +57,7 @@ export const updateCustomer = async (req: Request, res: Response): Promise<void>
 export const deleteCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const deletedCustomer: ICustomer | null = await Customer.findByIdAndDelete(id);
+    const deletedCustomer: ICustomer | null = await CustomerModel.findByIdAndDelete(id);
     if (deletedCustomer) {
       res.status(200).json({ message: 'Customer deleted successfully' });
     } else {

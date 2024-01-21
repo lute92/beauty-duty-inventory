@@ -3,6 +3,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET || "test"
+
 // Extend the Express Request interface to include the user property
 declare global {
   namespace Express {
@@ -19,7 +21,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
     return res.sendStatus(401);
   }
 
-  jwt.verify(token, 'your_secret_key', (err, user) => {
+  jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       return res.sendStatus(403);
     }

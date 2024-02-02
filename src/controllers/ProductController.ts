@@ -1,17 +1,14 @@
 import { Request, Response } from 'express';
-import { IProduct, IProductImage, ProductImageModel, ProductModel } from '../models/domain/models';
+import { IProduct, ProductModel } from '../models/domain/models';
 
 // Create a new product
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, brand, category, sellingPrice, productImages, qty, weight, mnuCountry } = req.body;
+    const { name, description, brand, category, sellingPrice, qty, weight, mnuCountry, imageFiles } = req.body;
 
     const existingProduct = await ProductModel.findOne({ name: name, weigth: weight });
     if (existingProduct) {
       return res.status(400).json({ message: "Product name already exists." });
-    }
-    else if (!Array.isArray(productImages)) {
-      return res.status(400).json({ message: "Invalid request body." })
     }
 
     const product = new ProductModel({
@@ -25,14 +22,8 @@ export const createProduct = async (req: Request, res: Response) => {
       mnuCountry
     });
 
-
-    /**Save Product */
-    product.images = productImages.map((images: IProductImage) => {
-      return images;
-    })
-
     const createdProduct = await product.save();
-    
+
     res.status(201).json({ message: "Product created.", createdProduct });
 
   } catch (error) {
@@ -101,22 +92,18 @@ export const searchProducts = async (req: Request, res: Response) => {
 
   try {
 
-    let products: IProduct[] = [];
     const totalPages = await ProductModel.find(filter).countDocuments();
-    if (page == 0 && limit == 0) {//No Paging Params have given
-      products = await ProductModel.find(filter)
+    const products = (page == 0 && limit == 0) ? //No Paging Params have given
+      await ProductModel.find(filter)
         .lean()
-        .exec();
-    }
-    else {
-      products = await ProductModel.find(filter)
+        .exec()
+      : await ProductModel.find(filter)
         .populate('category')
         .populate('brand')
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit))
         .lean()
         .exec();
-    }
 
     res.status(200).json({
       products,
@@ -162,7 +149,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    
+
     res.status(204).json(updatedProduct);
 
   } catch (error) {

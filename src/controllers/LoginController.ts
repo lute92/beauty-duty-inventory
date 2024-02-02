@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import User from '../models/domain/User';
+import {UserModel} from '../models/domain/models';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "test"
 export const login = async (req: Request, res: Response) => {
     const { username, password } = req.body;
 
-    const user = await User.findOne({ username });
+    const user = await UserModel.findOne({ username });
 
     if (!user) {
         return res.status(401).send('Invalid username or password');

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Purchase from '../models/domain/Purchase';
 import PurchaseDetail, { IPurchaseDetail } from '../models/domain/PurchaseDetail';
 import ProductImage from '../models/domain/ProductImage';
-import { savePurchaseInfo } from '../services/PurchaseService';
+import { savePurchaseInfo } from '../services/PurchaseService.ts.tmp';
 
 export const createPurchase = async (req: Request, res: Response) => {
     try {

@@ -11,8 +11,7 @@ import { createCurrency, deleteCurrency, getCurrencies, getCurrencyById, updateC
 import { createCategory, deleteCategory, getCategories, getCategoryById, updateCategory } from '../controllers/CategoryController';
 import { createBrand, deleteBrand, getBrandById, getBrands, updateBrand } from '../controllers/BrandController';
 import { createCustomer, deleteCustomer, getCustomerById, getCustomers, updateCustomer } from '../controllers/CustomerController';
-import { createPurchase, deletePurchaseInfo, getAllPurchaseInfo, getPurchaseInfo } from '../controllers/PurchaseController';
-import { importDataFromExcel } from '../controllers/ImportExcelController';
+
 import { login, logout } from '../controllers/LoginController';
 import { authenticateJWT } from '../authMiddleware';
 
@@ -26,12 +25,12 @@ router.post(defaultRoutePrefix + '/logout', logout);
 //router.get(defaultRoutePrefix + '/profile', getUserProfile);
 
 /** Purchase Routes*/
-router.post(defaultRoutePrefix + '/purchases', authenticateJWT, createPurchase);
-/* router.get(defaultRoutePrefix + '/purchases/search', searchProducts); */
+/* router.post(defaultRoutePrefix + '/purchases', authenticateJWT, createPurchase);
+router.get(defaultRoutePrefix + '/purchases/search', searchProducts);
 router.get(defaultRoutePrefix + '/purchases', authenticateJWT, getAllPurchaseInfo);
 router.get(defaultRoutePrefix + '/purchases/:id', authenticateJWT, getPurchaseInfo);
-/* router.put(defaultRoutePrefix + '/products/:id', updateProduct); */
-router.delete(defaultRoutePrefix + '/purchases/:id', authenticateJWT, deletePurchaseInfo);
+router.put(defaultRoutePrefix + '/products/:id', updateProduct);
+router.delete(defaultRoutePrefix + '/purchases/:id', authenticateJWT, deletePurchaseInfo); */
 
 /** Product Routes*/
 router.post(defaultRoutePrefix + '/products', authenticateJWT, createProduct);
@@ -42,7 +41,7 @@ router.put(defaultRoutePrefix + '/products/:id', authenticateJWT, updateProduct)
 router.delete(defaultRoutePrefix + '/products/:id', authenticateJWT, deleteProduct);
 
 /**Import Product */
-router.post(defaultRoutePrefix + '/products/import', authenticateJWT, importDataFromExcel);
+//router.post(defaultRoutePrefix + '/products/import', authenticateJWT, importDataFromExcel);
 
 /** Currency Routes*/
 router.post(defaultRoutePrefix + '/currencies', authenticateJWT, createCurrency);

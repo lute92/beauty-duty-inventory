@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
-import { IProductImage } from '../domain/ProductImage';
+import { IProductImage } from '../domain/models';
+
 
 export interface IProductResponse {
     productId: string;

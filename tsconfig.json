@@ -8,7 +8,7 @@
     },
     "include": [
         "src/**/*.ts"
-    ],
+, "src/services/PurchaseService.ts.tmp", "src/controllers/PurchaseController.ts.tmp", "src/controllers/ImportExcelController.ts.tmp"    ],
     "exclude": [
         "node_modules"
     ]

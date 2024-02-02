@@ -3,7 +3,7 @@ import Brand from "../models/domain/Brand";
 import Category from "../models/domain/Category";
 import Product from "../models/domain/Product";
 import { Timestamp } from "mongodb";
-import { savePurchaseInfo } from "../services/PurchaseService";
+import { savePurchaseInfo } from "../services/PurchaseService.ts.tmp";
 
 
 interface ExcelRow {

@@ -12,13 +12,6 @@ export interface ICategory extends Document {
   description: string;
 }
 
-export interface IProductImage extends Document {
-  _id: mongoose.Types.ObjectId;
-  productId: mongoose.Types.ObjectId;
-  url: string;
-  fileName: string;
-}
-
 export interface IProduct extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -26,25 +19,35 @@ export interface IProduct extends Document {
   brand: mongoose.Types.ObjectId;
   category: mongoose.Types.ObjectId;
   sellingPrice: number;
+  varient: IColorVarient | ISizeVarient;
   images: IProductImage[];
-  weight: string;
-  qty: number;
-  mnuCountry: string;
 }
 
-export interface IProductBatch extends Document {
-  _id: mongoose.Types.ObjectId;
-  batchId: string;
-  productId: mongoose.Types.ObjectId;
+export interface IColorVarient {
+  type: 'color',
+  colorCode: string;
+  batches: IProductBatch[];
+}
+
+export interface ISizeVarient {
+  type: 'size',
+  size: string;
+  batches: IProductBatch[];
+}
+
+export interface IProductImage {
+  _id: string;
+  url: string;
+  fileName: string;
+}
+
+export interface IProductBatch {
+  _id: string;
   mnuDate: number;
   expDate: number;
+  quantity: number;
+  mnuCountry: string;
   note: string;
-}
-
-export interface ICountry extends Document {
-  _id: mongoose.Types.ObjectId;
-  countryName: string;
-  isoCode: string;
 }
 
 export interface ICurrency extends Document {
@@ -59,28 +62,6 @@ export interface ICustomer extends Document {
   address: string;
   phoneNumber: string;
 }
-
-export interface IPurchase extends Document {
-  _id: mongoose.Types.ObjectId;
-  orderNumber: string;
-  purchaseDate: number;
-  currency: mongoose.Types.ObjectId;
-  exchangeRate: number;
-  extraCost: number;
-  note: string;
-  purchaseDetails: IPurchaseDetail[];
-}
-
-export interface IPurchaseDetail extends Document {
-  _id: mongoose.Types.ObjectId;
-  product: mongoose.Types.ObjectId;
-  quantity: number;
-  purchasePrice: number;
-  itemCost: number;
-  expDate: String;
-  mnuDate: String;
-}
-
 export interface ISales extends Document {
   _id: mongoose.Types.ObjectId;
   salesDate: number;
@@ -118,25 +99,6 @@ const CategorySchema = new Schema<ICategory>({
   description: { type: String, required: true },
 });
 
-const ProductImageSchema = new Schema<IProductImage>({
-  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-  url: { type: String, required: true },
-  fileName: { type: String, required: true },
-});
-
-const ProductBatchSchema = new Schema<IProductBatch>({
-  batchId: { type: String, required: true },
-  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-  mnuDate: { type: Number, required: true },
-  expDate: { type: Number, required: true },
-  note: { type: String, required: true },
-});
-
-const CountrySchema = new Schema<ICountry>({
-  countryName: { type: String, required: true },
-  isoCode: { type: String, required: true },
-});
-
 const CurrencySchema = new Schema<ICurrency>({
   name: { type: String, required: true },
   description: { type: String, required: true },
@@ -148,23 +110,41 @@ const CustomerSchema = new Schema<ICustomer>({
   phoneNumber: { type: String, required: true },
 });
 
-const PurchaseDetailSchema = new Schema<IPurchaseDetail>({
-  product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-  quantity: { type: Number, required: true },
-  purchasePrice: { type: Number, required: true },
-  itemCost: { type: Number, required: true },
-  expDate: { type: String, required: true },
-  mnuDate: { type: String, required: true },
-});
-
-const PurchaseSchema = new Schema<IPurchase>({
-  orderNumber: { type: String, required: true },
-  purchaseDate: { type: Number, required: true },
-  currency: { type: Schema.Types.ObjectId, ref: 'Currency', required: true },
-  exchangeRate: { type: Number, required: true },
-  extraCost: { type: Number, required: true },
-  note: { type: String, required: true },
-  purchaseDetails: { type: [PurchaseDetailSchema], required: true },
+const productSchema = new Schema({
+  _id: { type: mongoose.Types.ObjectId, required: true },
+  productCode: { type: String, required: false },
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  brand: { type: mongoose.Types.ObjectId, required: true },
+  category: { type: mongoose.Types.ObjectId, required: true },
+  sellingPrice: { type: Number, required: true },
+  varient: {
+    type: {
+      type: String,
+      enum: ['color', 'size'],
+      required: true,
+    },
+    colorCode: { type: String },
+    size: { type: String },
+    batches: [
+      {
+        _id: { type: String, required: true },
+        createdDate: { type: Number, required: true },
+        mnuDate: { type: Number, required: false },
+        expDate: { type: Number, required: false },
+        quantity: { type: Number, required: true },
+        mnuCountry: { type: String, required: false },
+        note: { type: String, required: false },
+      },
+    ],
+  },
+  images: [
+    {
+      _id: { type: String, required: true },
+      url: { type: String, required: true },
+      fileName: { type: String, required: true },
+    },
+  ],
 });
 
 const SalesDetailsSchema = new Schema<ISalesDetails>({
@@ -190,45 +170,25 @@ const UserSchema = new Schema<IUser>({
   createdDate: { type: Number, required: true },
 });
 
-const ProductSchema = new Schema<IProduct>({
-  name: { type: String, required: true },
-  description: { type: String, required: true },
-  brand: { type: Schema.Types.ObjectId, ref: 'Brand', required: true },
-  category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-  sellingPrice: { type: Number, required: true },
-  images: { type: [ProductImageSchema], required: true },
-  weight: { type: String, required: true },
-  qty: { type: Number, required: true },
-  mnuCountry: { type: String, required: true },
-});
+
 
 // Define Mongoose Models
 const BrandModel = mongoose.model<IBrand>('Brand', BrandSchema);
 const CategoryModel = mongoose.model<ICategory>('Category', CategorySchema);
-const ProductImageModel = mongoose.model<IProductImage>('ProductImage', ProductImageSchema);
-const ProductBatchModel = mongoose.model<IProductImage>('ProductBatch', ProductBatchSchema);
-const CountryModel = mongoose.model<ICountry>('Country', CountrySchema);
 const CurrencyModel = mongoose.model<ICurrency>('Currency', CurrencySchema);
 const CustomerModel = mongoose.model<ICustomer>('Customer', CustomerSchema);
-const PurchaseDetailModel = mongoose.model<IPurchaseDetail>('PurchaseDetail', PurchaseDetailSchema);
-const PurchaseModel = mongoose.model<IPurchase>('Purchase', PurchaseSchema);
 const SalesDetailsModel = mongoose.model<ISalesDetails>('SalesDetails', SalesDetailsSchema);
 const SalesModel = mongoose.model<ISales>('Sales', SalesSchema);
 const UserModel = mongoose.model<IUser>('User', UserSchema);
-const ProductModel = mongoose.model<IProduct>('Product', ProductSchema);
+const ProductModel = mongoose.model('Product', productSchema);
 
 export {
   BrandModel,
   CategoryModel,
-  ProductImageModel,
-  ProductBatchModel,
-  CountryModel,
   CurrencyModel,
   CustomerModel,
-  PurchaseDetailModel,
-  PurchaseModel,
   SalesDetailsModel,
   SalesModel,
   UserModel,
-  ProductModel,
+  ProductModel
 };

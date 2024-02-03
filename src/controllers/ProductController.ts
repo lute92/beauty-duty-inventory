@@ -1,25 +1,23 @@
 import { Request, Response } from 'express';
-import { IProduct, ProductModel } from '../models/domain/models';
+import { ProductModel } from '../models/domain/models';
 
 // Create a new product
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, brand, category, sellingPrice, qty, weight, mnuCountry, imageFiles } = req.body;
+    const { name, description, brand, category, sellingPrice, batches, images } = req.body;
 
-    const existingProduct = await ProductModel.findOne({ name: name, weigth: weight });
+    const existingProduct = await ProductModel.findOne({ name: name });
     if (existingProduct) {
       return res.status(400).json({ message: "Product name already exists." });
     }
-
     const product = new ProductModel({
       name,
       description,
       brand,
       category,
       sellingPrice,
-      qty,
-      weight,
-      mnuCountry
+      batches,
+      images
     });
 
     const createdProduct = await product.save();
@@ -31,8 +29,6 @@ export const createProduct = async (req: Request, res: Response) => {
     res.status(400).json({ message: "Failed to create product.", error });
   }
 };
-
-
 
 // Get all products
 export const getProducts = async (req: Request, res: Response) => {
@@ -170,5 +166,44 @@ export const deleteProduct = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error deleting product:", error);
     res.status(500).json({ error: 'Failed to delete product' });
+  }
+};
+
+/**
+ * Create a batch of a product by productId
+ * @param req 
+ * @param res 
+ * @returns 
+ */
+export const createProductBatch = async (req: Request, res: Response) => {
+  try {
+    const productId = req.params.id || req.params.id;
+
+    if (!productId) {
+      return res.status(400).json({ message: "Invalid Product Id" })
+    }
+
+    const existingProduct = await ProductModel.findById(productId);
+    if (!existingProduct) {
+      return res.status(400).json({ message: "Product not found." });
+    }
+
+    const { createdDate, mnuDate, expDate, quantity, note } = req.body;
+
+    existingProduct.batches.push({
+      createdDate: createdDate,
+      mnuDate: mnuDate,
+      expDate: expDate,
+      quantity: quantity,
+      note: note
+    })
+    
+    await existingProduct.save();
+
+    res.status(201).json({ message: "Batch created." });
+
+  } catch (error) {
+    console.error("Error creating product:", error);
+    res.status(400).json({ message: "Failed to create product.", error });
   }
 };

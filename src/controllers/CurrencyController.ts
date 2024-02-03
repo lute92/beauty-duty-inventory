@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
-import { IGetAllCurrencies } from '../models/response/IGetAllCurrencies';
-import { CurrencyModel, ICurrency } from '../models/domain/models';
+import { CurrencyModel } from '../models/domain/models';
 
 export const createCurrency = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, description }: { name: string; description: string } = req.body;
-    const newCurrency: ICurrency = new CurrencyModel({ name, description });
-    const savedCurrency: ICurrency = await newCurrency.save();
+    const newCurrency = new CurrencyModel({ name, description });
+    const savedCurrency = await newCurrency.save();
     res.status(201).json(savedCurrency);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create currency' });
@@ -22,29 +21,25 @@ export const getCurrencies = async (req: Request, res: Response): Promise<void> 
   const totalRecords = await CurrencyModel.countDocuments();
   const totalPages = Math.ceil(totalRecords / Number(limit));
 
-  const filter:any ={};
+  const filter: any = {};
 
-  if(name?.length > 0){
+  if (name?.length > 0) {
     filter.name = { $regex: name, $options: 'i' };
   }
-  if(description?.length > 0){
+  if (description?.length > 0) {
     filter.description = { $regex: description, $options: 'i' };
   }
 
   try {
-    let currencies: ICurrency[] = [];
-    if (page == 0 && limit == 0) {//No Paging Params have given
-      currencies = await CurrencyModel.find(filter)
+    const currencies = page == 0 && limit == 0 ?//No Paging Params have given
+      await CurrencyModel.find(filter)
         .lean()
-        .exec();
-    } else {
-
-      currencies = await CurrencyModel.find(filter)// Requested with paging params
+        .exec() :
+      await CurrencyModel.find(filter)// Requested with paging params
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit))
         .lean()
         .exec();
-    }
 
 
     res.status(200).json({
@@ -61,7 +56,7 @@ export const getCurrencies = async (req: Request, res: Response): Promise<void> 
 export const getCurrencyById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const currency: ICurrency | null = await CurrencyModel.findById(id);
+    const currency = await CurrencyModel.findById(id);
     if (currency) {
       res.status(200).json(currency);
     } else {
@@ -76,7 +71,7 @@ export const updateCurrency = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
     const { name, description }: { name?: string; description?: string } = req.body;
-    const updatedCurrency: ICurrency | null = await CurrencyModel.findByIdAndUpdate(
+    const updatedCurrency = await CurrencyModel.findByIdAndUpdate(
       id,
       { name, description },
       { new: true }
@@ -94,7 +89,7 @@ export const updateCurrency = async (req: Request, res: Response): Promise<void>
 export const deleteCurrency = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const deletedCurrency: ICurrency | null = await CurrencyModel.findByIdAndDelete(id);
+    const deletedCurrency = await CurrencyModel.findByIdAndDelete(id);
     if (deletedCurrency) {
       res.status(200).json({ message: 'Currency deleted successfully' });
     } else {

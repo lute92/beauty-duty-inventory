@@ -6,6 +6,7 @@ import {
   updateProduct,
   deleteProduct,
   searchProducts,
+  createProductBatch,
 } from '../controllers/ProductController';
 import { createCurrency, deleteCurrency, getCurrencies, getCurrencyById, updateCurrency } from '../controllers/CurrencyController';
 import { createCategory, deleteCategory, getCategories, getCategoryById, updateCategory } from '../controllers/CategoryController';
@@ -39,6 +40,9 @@ router.get(defaultRoutePrefix + '/products', authenticateJWT, getProducts);
 router.get(defaultRoutePrefix + '/products/:id', authenticateJWT, getProductById);
 router.put(defaultRoutePrefix + '/products/:id', authenticateJWT, updateProduct);
 router.delete(defaultRoutePrefix + '/products/:id', authenticateJWT, deleteProduct);
+
+/** Product Batch */
+router.post(defaultRoutePrefix + '/products/:id/productBatch', authenticateJWT, createProductBatch);
 
 /**Import Product */
 //router.post(defaultRoutePrefix + '/products/import', authenticateJWT, importDataFromExcel);

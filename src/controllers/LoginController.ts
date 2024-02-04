@@ -22,7 +22,7 @@ export const login = async (req: Request, res: Response) => {
 
     const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ token });
+    return res.json({ token });
 };
 
 export const logout = async (req: Request, res: Response) => {

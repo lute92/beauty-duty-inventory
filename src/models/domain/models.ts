@@ -60,7 +60,7 @@ const productBatchSchema = new Schema({
   expDate: { type: Number, required: false },
   quantity: { type: Number, required: true },
   mnuCountry: { type: String, required: false },
-  note: { type: String, required: true },
+  note: { type: String, required: false }
 });
 
 const productImageSchema = new Schema({
@@ -70,7 +70,7 @@ const productImageSchema = new Schema({
 
 const productSchema = new Schema({
   name: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String, required: false },
   brand: { type: mongoose.Types.ObjectId, ref: 'Brand', required: true },
   category: { type: mongoose.Types.ObjectId, ref: 'Category', required: true },
   batches: [productBatchSchema],

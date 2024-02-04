@@ -22,11 +22,11 @@ export const createProduct = async (req: Request, res: Response) => {
 
     const createdProduct = await product.save();
 
-    res.status(201).json({ message: "Product created.", createdProduct });
+    return res.status(201).json({ message: "Product created.", createdProduct });
 
   } catch (error) {
     console.error("Error creating product:", error);
-    res.status(400).json({ message: "Failed to create product.", error });
+    return res.status(400).json({ message: "Failed to create product.", error });
   }
 };
 
@@ -101,14 +101,14 @@ export const searchProducts = async (req: Request, res: Response) => {
         .lean()
         .exec();
 
-    res.status(200).json({
+    return res.status(200).json({
       products,
       page,
       totalPages: Math.ceil(totalPages / limit)
     });
   } catch (error) {
     console.error("Error searching products:", error);
-    res.status(500).json({ error: 'Failed to fetch products' });
+    return res.status(500).json({ error: 'Failed to fetch products' });
   }
 }
 
@@ -118,7 +118,7 @@ export const getProductById = async (req: Request, res: Response) => {
     const product = await ProductModel.findById(req.params.id);
 
     if (product) {
-      res.status(200).json(product);
+      return res.status(200).json(product);
     }
     else {
       return res.status(404).json({ error: 'Product not found' });
@@ -126,7 +126,7 @@ export const getProductById = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error("Error getting product by Id:", error);
-    res.status(500).json({ error: 'Failed to fetch product' });
+    return res.status(500).json({ error: 'Failed to fetch product' });
   }
 };
 
@@ -146,11 +146,11 @@ export const updateProduct = async (req: Request, res: Response) => {
     }
 
 
-    res.status(204).json(updatedProduct);
+    return res.status(204).json(updatedProduct);
 
   } catch (error) {
     console.error("Error updating product:", error);
-    res.status(500).json({ error: 'Failed to update product' });
+    return res.status(500).json({ error: 'Failed to update product' });
   }
 };
 
@@ -162,10 +162,10 @@ export const deleteProduct = async (req: Request, res: Response) => {
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    res.json({ message: 'Product deleted successfully' });
+    return res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error("Error deleting product:", error);
-    res.status(500).json({ error: 'Failed to delete product' });
+    return res.status(500).json({ error: 'Failed to delete product' });
   }
 };
 
@@ -180,7 +180,7 @@ export const createProductBatch = async (req: Request, res: Response) => {
     const productId = req.params.id || req.params.id;
 
     if (!productId) {
-      return res.status(400).json({ message: "Invalid Product Id" })
+      return res.status(400).json({ message: "Invalid Product Id." })
     }
 
     const existingProduct = await ProductModel.findById(productId);
@@ -188,22 +188,86 @@ export const createProductBatch = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Product not found." });
     }
 
-    const { createdDate, mnuDate, expDate, quantity, note } = req.body;
+    const { mnuDate, expDate, quantity, note } = req.body;
+
+    const isMnuDateAndExpDateAlreadyExist = existingProduct.batches.find((batch) => {
+      return batch.mnuDate === mnuDate && batch.expDate === expDate;
+    });
+
+    if (isMnuDateAndExpDateAlreadyExist) {
+      throw Error("Batch with same manufacture date and expire date already exists.");
+    }
 
     existingProduct.batches.push({
-      createdDate: createdDate,
+      createdDate: Date.now(),
       mnuDate: mnuDate,
       expDate: expDate,
       quantity: quantity,
       note: note
-    })
-    
+    });
+
     await existingProduct.save();
 
-    res.status(201).json({ message: "Batch created." });
+    return res.status(201).json({ message: "Batch created." });
+
+  } catch (error: any) {
+    console.error("Error creating product:", error.message);
+
+    return res.status(400).json(`Error: ${error.message}`);
+  }
+};
+
+export const updateProductBatch = async (req: Request, res: Response) => {
+  try {
+    const productId = req.params.productId || req.params.productId;
+    const batchId = req.params.batchId || req.params.batchId;
+
+    if (!productId) {
+      return res.status(400).json({ message: "ProductId is required." })
+    }
+
+    if (!batchId) {
+      return res.status(400).json({ message: "BatchId is required." })
+    }
+
+    const existingProduct = await ProductModel.findOne(
+      { _id: productId },
+      {
+        batches: {
+          $elemMatch: { _id: batchId },
+        },
+      }
+    );
+
+    if (!existingProduct) {
+      return res.status(400).json({ message: "Product not found." });
+    }
+
+    const { createdDate, mnuDate, expDate, quantity, mnuCountry, note } = req.body;
+
+    const updatedProduct = await ProductModel.findOneAndUpdate(
+      { _id: productId, 'batches._id': batchId },
+      {
+        $set: {
+          'batches.$.createdDate': createdDate,
+          'batches.$.mnuDate': mnuDate,
+          'batches.$.expDate': expDate,
+          'batches.$.quantity': quantity,
+          'batches.$.mnuCountry': mnuCountry,
+          'batches.$.note': note,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    return res.status(204).json(updatedProduct);
 
   } catch (error) {
-    console.error("Error creating product:", error);
-    res.status(400).json({ message: "Failed to create product.", error });
+    console.error("Error updating product:", error);
+    return res.status(500).json({ error: 'Failed to update product' });
   }
 };

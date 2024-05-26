@@ -1,10 +1,17 @@
 version: '3'
 services:
   frontend:
-    image: sithukyaw1992/bdbackend:v0.0.5 # Replace with your Node.js frontend image details from Docker Hub
+    image: sithukyaw1992/beautyduty-backend:0.0.1 # Replace with your Node.js frontend image details from Docker Hub
     container_name: backend-container
     build:
       context: .
       dockerfile: Dockerfile # Use the name of your Dockerfile if it's not named "Dockerfile"
     ports:
       - "4900:4900"
+    environment:
+      MONGO_DBNAME: ${MONGO_DBNAME}
+      MONGO_DBUSER: ${MONGO_DBUSER}
+      MONGO_DBPASS: ${MONGO_DBPASS}
+      MONGO_CLUSTER: ${MONGO_CLUSTER}
+      JWT_SECRET: ${JWT_SECRET}
+      STORAGE_FOLDER_NAME: ${STORAGE_FOLDER_NAME}

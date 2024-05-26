@@ -1,23 +1,72 @@
 import { Request, Response } from 'express';
 import { ProductModel } from '../models/domain/models';
+import { bucket } from '../firebaseConfig';
+import { v4 as uuidv4 } from 'uuid';
+import * as path from 'path';
+import * as fs from 'fs';
 
-// Create a new product
+const storageFolderName = process.env.STORAGE_FOLDER_NAME || "dev";
+
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, brand, category, sellingPrice, batches, images } = req.body;
+    const { name, description, brand, category, sellingPrice, batches } = req.body;
+    const images = req.files as Express.Multer.File[];
+
+    if (!images || !images.length) {
+      return res.status(400).json({ error: 'No images uploaded' });
+    }
 
     const existingProduct = await ProductModel.findOne({ name: name });
     if (existingProduct) {
       return res.status(400).json({ message: "Product name already exists." });
     }
+
+    const uploadedImagesPromises = images.map(async (file: Express.Multer.File) => {
+      const fileName = `${storageFolderName}/${uuidv4()}${path.extname(file.originalname)}`;
+      const filePath = path.join(file.destination, file.filename);
+
+      // Read file content from disk
+      const fileContent = fs.readFileSync(filePath);
+
+      // Upload file content to Firebase Storage
+      const fileRef = bucket.file(fileName);
+      const blobStream = fileRef.createWriteStream({
+        metadata: {
+          contentType: file.mimetype
+        }
+      });
+
+      await new Promise((resolve, reject) => {
+        blobStream.on('error', (error) => {
+          reject(error);
+        });
+
+        blobStream.on('finish', () => {
+          resolve("Success");
+        });
+
+        blobStream.end(fileContent);
+      });
+
+      return { url: `https://storage.googleapis.com/${bucket.name}/${fileName}`, fileName: file.originalname };
+    });
+
+    const uploadedImages = await Promise.all(uploadedImagesPromises);
+
+    const productImages = uploadedImages.map((file: any) => ({
+      url: file.url,
+      fileName: file.fileName,
+    }));
+
+    const batchesJson = JSON.parse(batches);
     const product = new ProductModel({
       name,
       description,
       brand,
       category,
       sellingPrice,
-      batches,
-      images
+      batches: batchesJson,
+      images: productImages,
     });
 
     const createdProduct = await product.save();
@@ -29,6 +78,7 @@ export const createProduct = async (req: Request, res: Response) => {
     return res.status(400).json({ message: "Failed to create product.", error });
   }
 };
+
 
 // Get all products
 export const getProducts = async (req: Request, res: Response) => {
@@ -158,10 +208,27 @@ export const updateProduct = async (req: Request, res: Response) => {
 // Delete a product
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
-    const product = await ProductModel.findByIdAndRemove(req.params.id);
+    // Find the product by ID
+    const product = await ProductModel.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
+    // Delete images from Firebase Storage
+    const deleteImagesPromises = product.images.map(async (image: { url: string, fileName: string }) => {
+      const fileName = `${storageFolderName}/${image.url.split('/').pop()}`; // Extract the file name from the URL
+      if (fileName) {
+        await bucket.file(fileName).delete();
+      }
+    });
+
+    console.info("Deleting product's images...");
+    await Promise.all(deleteImagesPromises);
+    console.info("Images deleted.");
+
+    // Delete the product from the database
+    await ProductModel.findByIdAndRemove(req.params.id);
+
     return res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error("Error deleting product:", error);
@@ -263,7 +330,7 @@ export const updateProductBatch = async (req: Request, res: Response) => {
     if (!updatedProduct) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    
+
     return res.status(204).json(updatedProduct);
 
   } catch (error) {

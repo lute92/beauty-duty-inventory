@@ -15,6 +15,9 @@ import { createCustomer, deleteCustomer, getCustomerById, getCustomers, updateCu
 
 import { login, logout } from '../controllers/LoginController';
 import { authenticateJWT } from '../authMiddleware';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 const router = express.Router();
 
@@ -33,8 +36,23 @@ router.get(defaultRoutePrefix + '/purchases/:id', authenticateJWT, getPurchaseIn
 router.put(defaultRoutePrefix + '/products/:id', updateProduct);
 router.delete(defaultRoutePrefix + '/purchases/:id', authenticateJWT, deletePurchaseInfo); */
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath);
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
 /** Product Routes*/
-router.post(defaultRoutePrefix + '/products', authenticateJWT, createProduct);
+router.post(defaultRoutePrefix + '/products', authenticateJWT, upload.array('images'), createProduct);
 router.get(defaultRoutePrefix + '/products/search',authenticateJWT, searchProducts);
 router.get(defaultRoutePrefix + '/products', authenticateJWT, getProducts);
 router.get(defaultRoutePrefix + '/products/:id', authenticateJWT, getProductById);

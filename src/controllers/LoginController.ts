@@ -18,12 +18,15 @@ export const login = async (req: Request, res: Response) => {
 
     if (!validPassword) {
         return res.status(401).send('Invalid password');
-    }   
+    }
 
-    const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1h' });
+    // Set token expiration time
+    const expiresIn = 3600; // 1 hour in seconds
+    const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn });
 
-    return res.json({ token });
+    return res.json({ token, expiresIn });
 };
+
 
 export const logout = async (req: Request, res: Response) => {
     // In a real-world scenario, you might want to add token blacklisting or other methods.

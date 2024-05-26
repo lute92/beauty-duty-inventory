@@ -18,12 +18,12 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
   const token = req.header('Authorization')?.split(' ')[1];
 
   if (!token) {
-    return res.sendStatus(401);
+    return res.status(401).json({error: "Invalid token!"});
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      return res.sendStatus(403);
+      return res.status(403).json({error: "Authentication failed!"});
     }
     req.user = user;
     next();

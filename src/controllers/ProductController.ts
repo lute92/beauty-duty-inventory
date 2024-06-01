@@ -12,9 +12,9 @@ export const createProduct = async (req: Request, res: Response) => {
     const { name, description, brand, category, sellingPrice, batches } = req.body;
     const images = req.files as Express.Multer.File[];
 
-    if (!images || !images.length) {
+    /* if (!images || !images.length) {
       return res.status(400).json({ error: 'No images uploaded' });
-    }
+    } */
 
     const existingProduct = await ProductModel.findOne({ name: name });
     if (existingProduct) {
@@ -59,6 +59,7 @@ export const createProduct = async (req: Request, res: Response) => {
     }));
 
     const batchesJson = JSON.parse(batches);
+    const now = new Date().getTime() / 1000;
     const product = new ProductModel({
       name,
       description,
@@ -67,6 +68,8 @@ export const createProduct = async (req: Request, res: Response) => {
       sellingPrice,
       batches: batchesJson,
       images: productImages,
+      createdDate: now,
+      updatedDate: null
     });
 
     const createdProduct = await product.save();
@@ -110,6 +113,7 @@ export const getProducts = async (req: Request, res: Response) => {
       products,
       page,
       totalPages,
+      totalProducts
     });
   } catch (error) {
     console.error("Error getting products:", error);
@@ -265,8 +269,10 @@ export const createProductBatch = async (req: Request, res: Response) => {
       throw Error("Batch with same manufacture date and expire date already exists.");
     }
 
+    const now = new Date().getTime() / 1000;
+
     existingProduct.batches.push({
-      createdDate: Date.now(),
+      createdDate: now,
       mnuDate: mnuDate,
       expDate: expDate,
       quantity: quantity,

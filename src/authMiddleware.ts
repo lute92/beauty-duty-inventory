@@ -23,7 +23,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).json({error: "Authentication failed!"});
+      return res.status(401).json({error: "Authentication failed!"});
     }
     req.user = user;
     next();

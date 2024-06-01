@@ -78,7 +78,9 @@ const productSchema = new Schema({
   brand: { type: mongoose.Types.ObjectId, ref: 'Brand', required: true },
   category: { type: mongoose.Types.ObjectId, ref: 'Category', required: true },
   batches: [productBatchSchema],
-  images: [productImageSchema]
+  images: [productImageSchema],
+  createdDate: {type: Number},
+  updatedDate: {type: Number}
 });
 
 const SalesDetailsSchema = new Schema<ISalesDetails>({

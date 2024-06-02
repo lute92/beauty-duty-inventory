@@ -7,51 +7,131 @@ import * as fs from 'fs';
 
 const storageFolderName = process.env.STORAGE_FOLDER_NAME || "dev";
 
+async function _uploadImages(images: Express.Multer.File[]): Promise<any[]> {
+  return Promise.all(images.map(async (file: Express.Multer.File) => {
+    const fileName = `${storageFolderName}/${uuidv4()}${path.extname(file.originalname)}`;
+    const filePath = path.join(file.destination, file.filename);
+
+    // Read file content from disk
+    const fileContent = fs.readFileSync(filePath);
+
+    // Upload file content to Firebase Storage
+    const fileRef = bucket.file(fileName);
+    const blobStream = fileRef.createWriteStream({
+      metadata: {
+        contentType: file.mimetype,
+      },
+    });
+
+    await new Promise((resolve, reject) => {
+      blobStream.on('error', (error) => {
+        reject(error);
+      });
+
+      blobStream.on('finish', () => {
+        resolve("Success");
+      });
+
+      blobStream.end(fileContent);
+    });
+
+    return { url: `https://storage.googleapis.com/${bucket.name}/${fileName}`, fileName: fileName };
+  }));
+}
+
+async function _deleteImage(fileName: string): Promise<void> {
+  try {
+    const fileRef = bucket.file(fileName);
+    await fileRef.delete();
+    console.log(`File ${fileName} deleted successfully.`);
+  } catch (error) {
+    console.error(`Failed to delete file ${fileName}:`, error);
+    throw error;
+  }
+}
+
+export const deleteProductImage = async (req: Request, res: Response) => {
+  try {
+    const { productid, filename, imageid } = req.params;
+    
+    if (!productid || !filename || !imageid) {
+      return res.status(400).json({ message: "Invalid productId or fileName" });
+    }
+
+    // Find the product
+    const product = await ProductModel.findById(productid);
+    if (!product) {
+      return res.status(400).json({ message: "No product found with the given id" });
+    }
+
+    // Remove the image from Firebase Storage
+    await _deleteImage(filename);
+
+    // Remove the image from the product's images array
+    product.images = product.images.filter(image => image._id?.toString() !== imageid) as any;
+
+    // Save the updated product document
+    const updatedProduct = await product.save();
+
+    return res.send(updatedProduct);
+  } catch (error) {
+    console.error("Error deleting image:", error);
+    return res.status(400).json({ message: "Failed to delete image", error });
+  }
+}
+
+export const uploadProductImages = async (req: Request, res: Response) => {
+  try {
+    const productId = req.params.id;
+    if (!productId) {
+      return res.status(400).json({ message: "Invalid productId" });
+    }
+
+    if (!req.files) {
+      return res.status(400).json({ message: "No images uploaded." });
+    }
+    
+    const product = await ProductModel.findById(productId);
+
+    if(!product){
+      return res.status(400).json({ message: "No product found with given id" });
+    }
+
+    const images = req.files as Express.Multer.File[];
+
+    const uploadedImages = await _uploadImages(images);
+    
+    const productImages = uploadedImages.map((file: any) => ({
+      url: file.url,
+      fileName: file.fileName,
+    }));
+
+    for (const productImg of productImages) {
+      product?.images.push(productImg);
+    }
+
+    const updatedProduct = await product.save();
+
+    return res.send(updatedProduct);
+
+  }
+  catch (error) {
+    console.error("Error creating product:", error);
+    return res.status(400).json({ message: "Failed to upload image", error });
+  }
+}
+
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const { name, description, brand, category, sellingPrice, batches } = req.body;
     const images = req.files as Express.Multer.File[];
-
-    /* if (!images || !images.length) {
-      return res.status(400).json({ error: 'No images uploaded' });
-    } */
 
     const existingProduct = await ProductModel.findOne({ name: name });
     if (existingProduct) {
       return res.status(400).json({ message: "Product name already exists." });
     }
 
-    const uploadedImagesPromises = images.map(async (file: Express.Multer.File) => {
-      const fileName = `${storageFolderName}/${uuidv4()}${path.extname(file.originalname)}`;
-      const filePath = path.join(file.destination, file.filename);
-
-      // Read file content from disk
-      const fileContent = fs.readFileSync(filePath);
-
-      // Upload file content to Firebase Storage
-      const fileRef = bucket.file(fileName);
-      const blobStream = fileRef.createWriteStream({
-        metadata: {
-          contentType: file.mimetype
-        }
-      });
-
-      await new Promise((resolve, reject) => {
-        blobStream.on('error', (error) => {
-          reject(error);
-        });
-
-        blobStream.on('finish', () => {
-          resolve("Success");
-        });
-
-        blobStream.end(fileContent);
-      });
-
-      return { url: `https://storage.googleapis.com/${bucket.name}/${fileName}`, fileName: file.originalname };
-    });
-
-    const uploadedImages = await Promise.all(uploadedImagesPromises);
+    const uploadedImages = await _uploadImages(images);
 
     const productImages = uploadedImages.map((file: any) => ({
       url: file.url,
@@ -98,11 +178,12 @@ export const getProducts = async (req: Request, res: Response) => {
 
     if (page === 0 && limit === 0) {
       // No Paging Params have given
-      products = await ProductModel.find().lean().exec();
+      products = await ProductModel.find().sort({ createdDate: -1 }).lean().exec();
     } else {
       products = await ProductModel.find()
         .populate('category')
         .populate('brand')
+        .sort({ createdDate: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean()

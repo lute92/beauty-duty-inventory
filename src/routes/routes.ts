@@ -7,6 +7,8 @@ import {
   deleteProduct,
   searchProducts,
   createProductBatch,
+  uploadProductImages,
+  deleteProductImage,
 } from '../controllers/ProductController';
 import { createCurrency, deleteCurrency, getCurrencies, getCurrencyById, updateCurrency } from '../controllers/CurrencyController';
 import { createCategory, deleteCategory, getCategories, getCategoryById, updateCategory } from '../controllers/CategoryController';
@@ -58,6 +60,8 @@ router.get(defaultRoutePrefix + '/products', authenticateJWT, getProducts);
 router.get(defaultRoutePrefix + '/products/:id', authenticateJWT, getProductById);
 router.put(defaultRoutePrefix + '/products/:id', authenticateJWT, updateProduct);
 router.delete(defaultRoutePrefix + '/products/:id', authenticateJWT, deleteProduct);
+router.put(defaultRoutePrefix + '/products/:id/images', authenticateJWT,  upload.array('images'), uploadProductImages);
+router.delete(defaultRoutePrefix + '/products/:productid/images/:filename/id/:imageid', authenticateJWT, deleteProductImage);
 
 /** Product Batch */
 router.post(defaultRoutePrefix + '/products/:id/productBatch', authenticateJWT, createProductBatch);

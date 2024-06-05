@@ -281,7 +281,7 @@ export const updateProduct = async (req: Request, res: Response) => {
     }
 
 
-    return res.status(204).json(updatedProduct);
+    return res.status(200).json(updatedProduct);
 
   } catch (error) {
     console.error("Error updating product:", error);
@@ -340,7 +340,7 @@ export const createProductBatch = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Product not found." });
     }
 
-    const { mnuDate, expDate, quantity, note } = req.body;
+    const { mnuDate, expDate, quantity, note, purchasePrice, sellingPrice } = req.body;
 
     const isMnuDateAndExpDateAlreadyExist = existingProduct.batches.find((batch) => {
       return batch.mnuDate === mnuDate && batch.expDate === expDate;
@@ -350,19 +350,21 @@ export const createProductBatch = async (req: Request, res: Response) => {
       throw Error("Batch with same manufacture date and expire date already exists.");
     }
 
-    const now = new Date().getTime() / 1000;
+    const now = Math.floor(new Date().getTime() / 1000)
 
     existingProduct.batches.push({
       createdDate: now,
       mnuDate: mnuDate,
       expDate: expDate,
       quantity: quantity,
-      note: note
+      note: note,
+      purchasePrice: purchasePrice,
+      sellingPrice: sellingPrice
     });
 
     await existingProduct.save();
 
-    return res.status(201).json({ message: "Batch created." });
+    return res.status(201).json(existingProduct);
 
   } catch (error: any) {
     console.error("Error creating product:", error.message);
@@ -373,8 +375,8 @@ export const createProductBatch = async (req: Request, res: Response) => {
 
 export const updateProductBatch = async (req: Request, res: Response) => {
   try {
-    const productId = req.params.productId || req.params.productId;
-    const batchId = req.params.batchId || req.params.batchId;
+    const productId = req.params.Id || req.params.id;
+    const batchId = req.params.batchid || req.params.batchId;
 
     if (!productId) {
       return res.status(400).json({ message: "ProductId is required." })
@@ -418,10 +420,38 @@ export const updateProductBatch = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    return res.status(204).json(updatedProduct);
+    return res.status(200).json(updatedProduct);
 
   } catch (error) {
     console.error("Error updating product:", error);
-    return res.status(500).json({ error: 'Failed to update product' });
+    return res.status(500).json({ error: 'Failed to update product.' });
+  }
+};
+
+// Delete a product
+export const deleteProductBatch = async (req: Request, res: Response) => {
+  try {
+    const { id, batchid } = req.params;
+    
+    if (!id || !batchid) {
+      return res.status(400).json({ message: "Invalid productId or batchId" });
+    }
+
+    // Find the product
+    const product = await ProductModel.findById(id);
+    if (!product) {
+      return res.status(400).json({ message: "No product found with the given id" });
+    }
+
+    // Remove the image from the product's images array
+    product.batches = product.batches.filter(batch => batch._id?.toString() !== batchid) as any;
+
+    // Save the updated product document
+    const updatedProduct = await product.save();
+
+    return res.send(updatedProduct);
+  } catch (error) {
+    console.error("Error deleting a batch:", error);
+    return res.status(400).json({ message: "Failed to delete a batch", error });
   }
 };

@@ -9,6 +9,8 @@ import {
   createProductBatch,
   uploadProductImages,
   deleteProductImage,
+  updateProductBatch,
+  deleteProductBatch,
 } from '../controllers/ProductController';
 import { createCurrency, deleteCurrency, getCurrencies, getCurrencyById, updateCurrency } from '../controllers/CurrencyController';
 import { createCategory, deleteCategory, getCategories, getCategoryById, updateCategory } from '../controllers/CategoryController';
@@ -65,6 +67,8 @@ router.delete(defaultRoutePrefix + '/products/:productid/images/:filename/id/:im
 
 /** Product Batch */
 router.post(defaultRoutePrefix + '/products/:id/productBatch', authenticateJWT, createProductBatch);
+router.put(defaultRoutePrefix + '/products/:id/productBatch/:batchid', authenticateJWT, updateProductBatch);
+router.delete(defaultRoutePrefix + '/products/:id/productBatch/:batchid', authenticateJWT, deleteProductBatch);
 
 /**Import Product */
 //router.post(defaultRoutePrefix + '/products/import', authenticateJWT, importDataFromExcel);

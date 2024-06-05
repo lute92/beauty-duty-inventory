@@ -55,7 +55,7 @@ const CustomerSchema = new Schema({
 });
 
 const productBatchSchema = new Schema({
-  createdDate: { type: Number, required: true },
+  createdDate: { type: Number },
   mnuDate: { type: Number, required: false },
   expDate: { type: Number, required: false },
   quantity: { type: Number, required: true },

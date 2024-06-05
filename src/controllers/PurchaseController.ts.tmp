@@ -1,0 +1,119 @@
+import { Request, Response } from 'express';
+import Purchase from '../models/domain/Purchase';
+import PurchaseDetail, { IPurchaseDetail } from '../models/domain/PurchaseDetail';
+import ProductImage from '../models/domain/ProductImage';
+import { savePurchaseInfo } from '../services/PurchaseService.ts.tmp';
+
+export const createPurchase = async (req: Request, res: Response) => {
+    try {
+        await savePurchaseInfo(req.body);
+        res.status(201).json({ message: 'Purchase created successfully' });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message || 'Failed to create purchase' });
+    }
+};
+
+export const getAllPurchaseInfo = async (req: Request, res: Response) => {
+
+    try {
+        const page = Number(req.query.page) || 0; // Current page number
+        const limit = Number(req.query.limit) || 0; // Number of products per page
+
+        const totalPurchases = await Purchase.countDocuments();
+        const totalPages = Math.ceil(totalPurchases / limit);
+
+        let purchases = [];
+
+        if (page === 0 && limit === 0) {
+            // No Paging Params have given
+            purchases = await Purchase.find().lean().exec();
+        } else {
+            purchases = await Purchase.find()
+                .populate('currency')
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .lean()
+                .exec();
+        }
+
+
+        const data = await Promise.all(
+            purchases.map(async (purchase) => {
+                const purchaseRes = {
+                    purchaseId: purchase._id,
+                    orderNumber: purchase.orderNumber,
+                    purchaseDate: purchase.purchaseDate,
+                    currency: purchase.currency,
+                    exchangeRate: purchase.exchangeRate,
+                    extraCost: purchase.extraCost,
+                    note: purchase.note
+                };
+                return purchaseRes;
+            })
+        );
+
+        res.status(200).json({
+            data,
+            page,
+            totalPages,
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to get purchase information', error: error });
+
+    }
+};
+
+export const getPurchaseInfo = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        // Find the purchase by ID
+        const purchase = await Purchase.findById(id)
+            .populate('currency')
+            .lean()
+            .exec();
+
+        if (!purchase) {
+            return res.status(404).json({ error: 'Purchase not found' });
+        }
+
+        // Find the purchase details for the given purchase ID
+        const _purchaseDetails = await PurchaseDetail.find({ purchase: purchase._id })
+            .populate('product')
+            .lean()
+            .exec();
+
+
+        const purchaseDetails = await Promise.all(
+            _purchaseDetails.map(async (detail: IPurchaseDetail) => {
+                const productImages = await ProductImage.find({ product: detail.product }).exec();
+                const { product, ...rest } = detail;
+                const transformedProduct = { ...product, productId: product._id, images: productImages };
+                return { ...rest, product: transformedProduct };
+            })
+        );
+
+        console.log(purchaseDetails);
+        // Find the stock items for the given purchase ID
+        //const stockItems = await Stock.find({ purchase: purchase._id });
+
+        res.json({ purchase, purchaseDetails });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to get purchase information' });
+    }
+};
+
+// Delete a purchase
+export const deletePurchaseInfo = async (req: Request, res: Response) => {
+    try {
+        const purchase = await Purchase.findByIdAndRemove(req.params.id);
+        const purchaseDetails = await PurchaseDetail.deleteMany({ purchase: req.params.id });
+
+        if (!purchase) {
+            return res.status(404).json({ error: 'Purchase info not found' });
+        }
+        res.json({ message: 'Purchase info deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete purchase info' });
+    }
+};

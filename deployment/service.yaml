@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: beautyduty-api-service
+  namespace: beautyduty-admin
+spec:
+  ports:
+  - protocol: TCP
+    port: 4900  # Use port 80 for HTTP traffic
+    targetPort: 4900  # Port your backend app is listening on
+  selector:
+    app: beautyduty-api
+  type: LoadBalancer

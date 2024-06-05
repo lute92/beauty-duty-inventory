@@ -1,21 +1,53 @@
 import { Request, Response } from 'express';
-import Category, { ICategory } from '../models/domain/Category';
+import { CategoryModel } from '../models/domain/models';
 
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, description }: { name: string; description: string } = req.body;
-    const newCategory: ICategory = new Category({ name, description });
-    const savedCategory: ICategory = await newCategory.save();
+    const newCategory = new CategoryModel({ name, description });
+    const savedCategory = await newCategory.save();
     res.status(201).json(savedCategory);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create category' });
   }
 };
 
-export const getCategories = async (_req: Request, res: Response): Promise<void> => {
+export const getCategories = async (req: Request, res: Response): Promise<void> => {
+  const page = req.query.page || 0; // Current page number
+  const limit = req.query.limit || 0; // Number of products per page
+  const name = req.query.name as string;
+  const description = req.query.description as string;
+
+  const totalRecords = await CategoryModel.countDocuments();
+  const totalPages = Math.ceil(totalRecords / Number(limit));
+
+  const filter: any = {};
+
+  if (name?.length > 0) {
+    filter.name = { $regex: name, $options: 'i' };
+  }
+  if (description?.length > 0) {
+    filter.description = { $regex: description, $options: 'i' };
+  }
+
   try {
-    const categories: ICategory[] = await Category.find();
-    res.status(200).json(categories);
+    const categories = page == 0 && limit == 0 ?//No Paging Params have given
+      await CategoryModel.find(filter)
+        .lean()
+        .exec() :
+      await CategoryModel.find(filter)// Requested with paging params
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .lean()
+        .exec();
+
+
+    res.status(200).json({
+      categories,
+      page,
+      totalPages
+    });
+
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve categories' });
   }
@@ -24,7 +56,7 @@ export const getCategories = async (_req: Request, res: Response): Promise<void>
 export const getCategoryById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const category: ICategory | null = await Category.findById(id);
+    const category = await CategoryModel.findById(id);
     if (category) {
       res.status(200).json(category);
     } else {
@@ -39,7 +71,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
     const { name, description }: { name?: string; description?: string } = req.body;
-    const updatedCategory: ICategory | null = await Category.findByIdAndUpdate(
+    const updatedCategory = await CategoryModel.findByIdAndUpdate(
       id,
       { name, description },
       { new: true }
@@ -57,7 +89,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
 export const deleteCategory = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const deletedCategory: ICategory | null = await Category.findByIdAndDelete(id);
+    const deletedCategory = await CategoryModel.findByIdAndDelete(id);
     if (deletedCategory) {
       res.status(200).json({ message: 'Category deleted successfully' });
     } else {
